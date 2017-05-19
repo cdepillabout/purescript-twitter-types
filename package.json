@@ -1,0 +1,30 @@
+{
+  "name": "purescript-twitter-types",
+  "version": "1.0.0",
+  "description": "Types for working with Twitter's API",
+  "scripts": {
+    "build": "pulp build",
+    "clean": "rimraf output && rimraf .pulp-cache",
+    "docs": "pulp docs",
+    "postinstall": "bower cache clean && bower install",
+    "publish": "pulp publish",
+    "test": "pulp test"
+  },
+  "author": "Dennis Gosnell",
+  "license": "BSD-3-Clause",
+  "dependencies": {},
+  "devDependencies": {
+    "bower": "^1.8.0",
+    "pulp": "^11.0.0",
+    "purescript": "^0.11.4",
+    "purescript-psa": "^0.5.1",
+    "rimraf": "^2.6.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cdepillabout/purescript-twitter-types.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cdepillabout/purescript-twitter-types/issues"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "purescript-twitter-types",
+  "homepage": "https://github.com/cdepillabout/purescript-unicode",
+  "description": "Types for use with Twitter's APIs.",
+  "keywords": [
+    "purescript"
+  ],
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/purescript-contrib/purescript-unicode.git"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-prelude": "^3.0.0",
+    "purescript-console": "^3.0.0"
+  },
+  "devDependencies": {
+    "purescript-console": "^3.0.0",
+    "purescript-psci-support": "^3.0.0",
+    "purescript-quickcheck": "^4.0.0",
+    "purescript-spec": "^0.13.0",
+    "purescript-random": "^3.0.0"
+  }
+}
