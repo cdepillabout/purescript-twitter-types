@@ -8,7 +8,9 @@
     "docs": "pulp docs",
     "postinstall": "bower cache clean && bower install",
     "publish": "pulp publish",
-    "test": "pulp test"
+    "test": "pulp test",
+    "watch": "pulp --watch build",
+    "watch:test": "pulp --watch test"
   },
   "author": "Dennis Gosnell",
   "license": "BSD-3-Clause",
