@@ -38,6 +38,8 @@ module Web.Twitter.Types
 
 import Prelude
 
+import Data.List (List)
+
 --import Control.Applicative
 --import Control.Monad
 --import Data.Aeson
@@ -55,12 +57,12 @@ import Prelude
 
 --newtype TwitterTime = TwitterTime { fromTwitterTime :: UTCTime }
 
---type UserId       = Integer
---type Friends      = [UserId]
---type URIString    = Text
---type UserName     = Text
---type StatusId     = Integer
---type LanguageCode = String
+type UserId       = Int
+type Friends      = List UserId
+type URIString    = String
+type UserName     = String
+type StatusId     = Int
+type LanguageCode = String
 
 --data StreamingAPI = SStatus Status
 --                  | SRetweetedStatus RetweetedStatus
