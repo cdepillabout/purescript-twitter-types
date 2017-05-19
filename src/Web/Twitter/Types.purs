@@ -38,6 +38,7 @@ module Web.Twitter.Types
 
 import Prelude
 
+import Data.DateTime (DateTime)
 import Data.List (List)
 
 --import Control.Applicative
@@ -55,7 +56,12 @@ import Data.List (List)
 --import System.Locale
 --#endif
 
+newtype TwitterTime = TwitterTime DateTime
 --newtype TwitterTime = TwitterTime { fromTwitterTime :: UTCTime }
+
+fromTwitterTime :: TwitterTime -> DateTime
+fromTwitterTime (TwitterTime dateTime) = dateTime
+
 
 type UserId       = Int
 type Friends      = List UserId
