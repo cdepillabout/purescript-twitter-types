@@ -38,9 +38,14 @@ module Web.Twitter.Types
 
 import Prelude
 
-import Data.Argonaut (JObject, (.?))
+import Data.Argonaut
+  (class DecodeJson, class EncodeJson, JObject, (.?), (:=), (~>),
+   foldJsonObject, jsonEmptyObject)
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
+import Data.Generic.Rep (class Generic)
+import Data.Generic.Rep.Eq (genericEq)
+import Data.Generic.Rep.Show (genericShow)
 import Data.List (List)
 
 --import Control.Applicative
@@ -92,15 +97,9 @@ checkError o = do
     go (Right msg) = Left msg
     go (Left _) = Right unit
 
---checkError :: Object -> Parser ()
---checkError o = do
---    err <- o .:? "error"
---    case err of
---        Just msg -> fail msg
---        Nothing -> return ()
-
---twitterTimeFormat :: String
---twitterTimeFormat = "%a %b %d %T %z %Y"
+twitterTimeFormat :: String
+twitterTimeFormat = "%a %b %d %T %z %Y"
+-- Sat Jun 14 10:15:19 +0000 2014
 
 --instance FromJSON TwitterTime where
 --    parseJSON = withText "TwitterTime" $ \t ->
@@ -893,25 +892,42 @@ checkError o = do
 --                                    , "screen_name" .= contributorScreenName
 --                                    ]
 
----- | Image size type. This type is included in the API response of \"\/1.1\/media\/upload.json\".
---data ImageSizeType = ImageSizeType
---    { imageSizeTypeWidth :: Int
---    , imageSizeTypeHeight :: Int
---    , imageSizeTypeType :: Text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+-- | Image size type. This type is included in the API response of
+-- \"\/1.1\/media\/upload.json\".
+newtype ImageSizeType = ImageSizeType
+    { imageSizeTypeWidth :: Int
+    , imageSizeTypeHeight :: Int
+    , imageSizeTypeType :: String
+    }
 
---instance FromJSON ImageSizeType where
---    parseJSON (Object o) =
---        ImageSizeType <$> o .:  "w"
---                      <*> o .:  "h"
---                      <*> o .:  "image_type"
---    parseJSON v = fail $ "unknown value: " ++ show v
+toImageSizeType :: Int -> Int -> String -> ImageSizeType
+toImageSizeType w h t =
+  ImageSizeType
+    { imageSizeTypeWidth: w
+    , imageSizeTypeHeight: h
+    , imageSizeTypeType: t
+    }
 
---instance ToJSON ImageSizeType where
---    toJSON ImageSizeType{..} = object [ "w"          .= imageSizeTypeWidth
---                                      , "h"          .= imageSizeTypeHeight
---                                      , "image_type" .= imageSizeTypeType
---                                      ]
+derive instance genericImageSizeType :: Generic ImageSizeType _
+instance eqImageSizeType :: Eq ImageSizeType where eq = genericEq
+instance showImageSizeType :: Show ImageSizeType where show = genericShow
+
+instance decodeJsonImageSizeType :: DecodeJson ImageSizeType where
+  -- decodeJson :: Json -> Either String ImageSizeType
+  decodeJson =
+    foldJsonObject (Left "not a JObject (ImageSizeType)") $ \o ->
+      toImageSizeType
+        <$> o .? "w"
+        <*> o .? "h"
+        <*> o .? "image_type"
+
+instance encodeJsonImageSizeType :: EncodeJson ImageSizeType where
+  -- encodeJson :: ImageSizeType -> Json
+  encodeJson (ImageSizeType imageSizeType) =
+    "w" := imageSizeType.imageSizeTypeWidth ~>
+    "h" := imageSizeType.imageSizeTypeHeight ~>
+    "image_type" := imageSizeType.imageSizeTypeType ~>
+    jsonEmptyObject
 
 ---- | This type is represents the API response of \"\/1.1\/media\/upload.json\".
 ---- See <https://dev.twitter.com/docs/api/multiple-media-extended-entities>.
