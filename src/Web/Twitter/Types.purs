@@ -38,7 +38,9 @@ module Web.Twitter.Types
 
 import Prelude
 
+import Data.Argonaut (JObject, (.?))
 import Data.DateTime (DateTime)
+import Data.Either (Either(..))
 import Data.List (List)
 
 --import Control.Applicative
@@ -79,6 +81,16 @@ type LanguageCode = String
 --                  | SDirectMessage DirectMessage
 --                  | SUnknown Value
 --                  deriving (Show, Eq, Data, Typeable, Generic)
+
+
+checkError :: JObject -> Either String Unit
+checkError o = do
+  err <- o .? "error"
+  go err
+  where
+    go :: Either String String -> Either String Unit
+    go (Right msg) = Left msg
+    go (Left _) = Right unit
 
 --checkError :: Object -> Parser ()
 --checkError o = do
