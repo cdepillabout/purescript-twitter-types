@@ -19,7 +19,8 @@
   "dependencies": {
     "purescript-prelude": "^3.0.0",
     "purescript-console": "^3.0.0",
-    "purescript-lists": "^4.1.1"
+    "purescript-lists": "^4.1.1",
+    "purescript-argonaut": "^3.0.0"
   },
   "devDependencies": {
     "purescript-console": "^3.0.0",
