@@ -152,7 +152,7 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --    , statusEntities :: Maybe Entities
 --    , statusExtendedEntities :: Maybe Entities
 --    , statusFavoriteCount :: Integer
---    , statusFavorited :: Maybe Bool
+--    , statusFavorited :: Maybe Boolean
 --    , statusFilterLevel :: Maybe Text
 --    , statusId :: StatusId
 --    , statusInReplyToScreenName :: Maybe Text
@@ -160,18 +160,18 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --    , statusInReplyToUserId :: Maybe UserId
 --    , statusLang :: Maybe LanguageCode
 --    , statusPlace :: Maybe Place
---    , statusPossiblySensitive :: Maybe Bool
+--    , statusPossiblySensitive :: Maybe Boolean
 --    , statusScopes :: Maybe Object
 --    , statusQuotedStatusId :: Maybe StatusId
 --    , statusQuotedStatus :: Maybe Status
 --    , statusRetweetCount :: Integer
---    , statusRetweeted :: Maybe Bool
+--    , statusRetweeted :: Maybe Boolean
 --    , statusRetweetedStatus :: Maybe Status
 --    , statusSource :: Text
 --    , statusText :: Text
---    , statusTruncated :: Bool
+--    , statusTruncated :: Boolean
 --    , statusUser :: User
---    , statusWithheldCopyright :: Maybe Bool
+--    , statusWithheldCopyright :: Maybe Boolean
 --    , statusWithheldInCountries :: Maybe [Text]
 --    , statusWithheldScope :: Maybe Text
 --    } deriving (Show, Eq, Data, Typeable, Generic)
@@ -335,7 +335,7 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --    , rsId              :: StatusId
 --    , rsText            :: Text
 --    , rsSource          :: Text
---    , rsTruncated       :: Bool
+--    , rsTruncated       :: Boolean
 --    , rsEntities        :: Maybe Entities
 --    , rsUser            :: User
 --    , rsRetweetedStatus :: Status
@@ -408,10 +408,21 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --                                      , "coordinates"           .= dmCoordinates
 --                                      ]
 
---data EventType = Favorite | Unfavorite
---               | ListCreated | ListUpdated | ListMemberAdded
---               | UserUpdate | Block | Unblock | Follow
---               deriving (Show, Eq, Data, Typeable, Generic)
+data EventType
+  = Favorite
+  | Unfavorite
+  | ListCreated
+  | ListUpdated
+  | ListMemberAdded
+  | UserUpdate
+  | Block
+  | Unblock
+  | Follow
+
+derive instance genericEventType :: Generic EventType _
+instance eqEventType :: Eq EventType where eq = genericEq
+instance showEventType :: Show EventType where show = genericShow
+
 
 --data EventTarget = ETUser User | ETStatus Status | ETList List | ETUnknown Value
 --                 deriving (Show, Eq, Data, Typeable, Generic)
@@ -479,29 +490,29 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 ---- | This type represents the Twitter user.
 ---- See <https://dev.twitter.com/docs/platform-objects/users>.
 --data User = User
---    { userContributorsEnabled :: Bool
+--    { userContributorsEnabled :: Boolean
 --    , userCreatedAt :: UTCTime
---    , userDefaultProfile :: Bool
---    , userDefaultProfileImage :: Bool
+--    , userDefaultProfile :: Boolean
+--    , userDefaultProfileImage :: Boolean
 --    , userDescription :: Maybe Text
 --    , userEmail :: Maybe Text
 --    , userFavoritesCount :: Int
---    , userFollowRequestSent :: Maybe Bool
---    , userFollowing :: Maybe Bool
+--    , userFollowRequestSent :: Maybe Boolean
+--    , userFollowing :: Maybe Boolean
 --    , userFollowersCount :: Int
 --    , userFriendsCount :: Int
---    , userGeoEnabled :: Bool
+--    , userGeoEnabled :: Boolean
 --    , userId :: UserId
---    , userIsTranslator :: Bool
+--    , userIsTranslator :: Boolean
 --    , userLang :: LanguageCode
 --    , userListedCount :: Int
 --    , userLocation :: Maybe Text
 --    , userName :: Text
---    , userNotifications :: Maybe Bool
+--    , userNotifications :: Maybe Boolean
 --    , userProfileBackgroundColor :: Maybe Text
 --    , userProfileBackgroundImageURL :: Maybe URIString
 --    , userProfileBackgroundImageURLHttps :: Maybe URIString
---    , userProfileBackgroundTile :: Maybe Bool
+--    , userProfileBackgroundTile :: Maybe Boolean
 --    , userProfileBannerURL :: Maybe URIString
 --    , userProfileImageURL :: Maybe URIString
 --    , userProfileImageURLHttps :: Maybe URIString
@@ -509,15 +520,15 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --    , userProfileSidebarBorderColor :: Text
 --    , userProfileSidebarFillColor :: Text
 --    , userProfileTextColor :: Text
---    , userProfileUseBackgroundImage :: Bool
---    , userProtected :: Bool
+--    , userProfileUseBackgroundImage :: Boolean
+--    , userProtected :: Boolean
 --    , userScreenName :: Text
---    , userShowAllInlineMedia :: Maybe Bool
+--    , userShowAllInlineMedia :: Maybe Boolean
 --    , userStatusesCount :: Int
 --    , userTimeZone :: Maybe Text
 --    , userURL :: Maybe URIString
 --    , userUtcOffset :: Maybe Int
---    , userVerified :: Bool
+--    , userVerified :: Boolean
 --    , userWithheldInCountries :: Maybe [Text]
 --    , userWithheldScope :: Maybe Text
 --    } deriving (Show, Eq, Data, Typeable, Generic)
