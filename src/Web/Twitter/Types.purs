@@ -39,14 +39,17 @@ module Web.Twitter.Types
 import Prelude
 
 import Data.Argonaut
-  (class DecodeJson, class EncodeJson, JObject, (.?), (:=), (~>),
-   foldJsonObject, jsonEmptyObject)
+  (class DecodeJson, class EncodeJson, JNumber, JObject, (.?), (:=), (~>),
+   foldJson, foldJsonObject, jsonEmptyObject)
+import Data.Argonaut.Decode.Combinators ((.??))
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Eq (genericEq)
 import Data.Generic.Rep.Show (genericShow)
+import Data.Int (fromNumber)
 import Data.List (List)
+import Data.Maybe (Maybe(..))
 
 --import Control.Applicative
 --import Control.Monad
@@ -874,10 +877,54 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --                            (Object o) -> Object $ union o $ fromList [("indices"::Text, toJSON entityIndices)]
 --                            _          -> error "Entity body must produce an object."
 
---data Contributor = Contributor
---    { contributorId :: UserId
---    , contributorScreenName :: Maybe Text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype Contributor = Contributor
+    { contributorId :: UserId
+    , contributorScreenName :: Maybe String
+    }
+
+toContributor :: Int -> Maybe String -> Contributor
+toContributor contribId screenName =
+  Contributor
+    { contributorId: contribId
+    , contributorScreenName: screenName
+    }
+
+derive instance genericContributor :: Generic Contributor _
+instance eqContributor :: Eq Contributor where eq = genericEq
+instance showContributor :: Show Contributor where show = genericShow
+
+instance decodeJsonContributor :: DecodeJson Contributor where
+  -- decodeJson :: Json -> Either String Contributor
+  decodeJson =
+    foldJson
+      (const err)
+      (const err)
+      num
+      (const err)
+      (const err)
+      obj
+    where
+      err :: forall a. Either String a
+      err = Left "not a JObject or JNumber (Contributor)"
+
+      obj :: JObject -> Either String Contributor
+      obj o =
+        toContributor
+          <$> o .? "id"
+          <*> o .?? "screen_name"
+
+      num :: JNumber -> Either String Contributor
+      num jnum =
+        case fromNumber jnum of
+          Nothing -> Left "not an Int (Contributor)"
+          Just n -> Right $ toContributor n Nothing
+
+instance encodeJsonContributor :: EncodeJson Contributor where
+  -- encodeJson :: Contributor -> Json
+  encodeJson (Contributor contributor) =
+    "id" := contributor.contributorId ~>
+    "screen_name" := contributor.contributorScreenName ~>
+    jsonEmptyObject
 
 --instance FromJSON Contributor where
 --    parseJSON (Object o) =
@@ -929,23 +976,39 @@ instance encodeJsonImageSizeType :: EncodeJson ImageSizeType where
     "image_type" := imageSizeType.imageSizeTypeType ~>
     jsonEmptyObject
 
----- | This type is represents the API response of \"\/1.1\/media\/upload.json\".
----- See <https://dev.twitter.com/docs/api/multiple-media-extended-entities>.
---data UploadedMedia = UploadedMedia
---    { uploadedMediaId :: Integer
---    , uploadedMediaSize :: Integer
---    , uploadedMediaImage :: ImageSizeType
---    } deriving (Show, Eq, Data, Typeable, Generic)
+-- | This type is represents the API response of \"\/1.1\/media\/upload.json\".
+-- See <https://dev.twitter.com/docs/api/multiple-media-extended-entities>.
+data UploadedMedia = UploadedMedia
+    { uploadedMediaId :: Int
+    , uploadedMediaSize :: Int
+    , uploadedMediaImage :: ImageSizeType
+    }
 
---instance FromJSON UploadedMedia where
---    parseJSON (Object o) =
---        UploadedMedia <$> o .:  "media_id"
---                      <*> o .:  "size"
---                      <*> o .:  "image"
---    parseJSON v = fail $ "unknown value: " ++ show v
+toUploadedMedia :: Int -> Int -> ImageSizeType -> UploadedMedia
+toUploadedMedia mediaId size image =
+  UploadedMedia
+    { uploadedMediaId: mediaId
+    , uploadedMediaSize: size
+    , uploadedMediaImage: image
+    }
 
---instance ToJSON UploadedMedia where
---    toJSON UploadedMedia{..} = object [ "media_id"  .= uploadedMediaId
---                                      , "size"      .= uploadedMediaSize
---                                      , "image"     .= uploadedMediaImage
---                                      ]
+derive instance genericUploadedMedia :: Generic UploadedMedia _
+instance eqUploadedMedia :: Eq UploadedMedia where eq = genericEq
+instance showUploadedMedia :: Show UploadedMedia where show = genericShow
+
+instance decodeJsonUploadedMedia :: DecodeJson UploadedMedia where
+  -- decodeJson :: Json -> Either String UploadedMedia
+  decodeJson =
+    foldJsonObject (Left "not a JObject (UploadedMedia)") $ \o ->
+      toUploadedMedia
+        <$> o .? "media_id"
+        <*> o .? "size"
+        <*> o .? "image"
+
+instance encodeJsonUploadedMedia :: EncodeJson UploadedMedia where
+  -- encodeJson :: UploadedMedia -> Json
+  encodeJson (UploadedMedia uploadedMedia) =
+    "media_id" := uploadedMedia.uploadedMediaId ~>
+    "size" := uploadedMedia.uploadedMediaSize ~>
+    "image" := uploadedMedia.uploadedMediaImage ~>
+    jsonEmptyObject
