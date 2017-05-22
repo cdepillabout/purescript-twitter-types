@@ -40,7 +40,7 @@ import Prelude
 
 import Data.Argonaut
   (class DecodeJson, class EncodeJson, JNumber, JObject, (.?), (:=), (~>),
-   foldJson, foldJsonObject, jsonEmptyObject)
+   decodeJson, foldJson, foldJsonObject, jsonEmptyObject)
 import Data.Argonaut.Decode.Combinators ((.??))
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
@@ -50,6 +50,7 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.Int (fromNumber)
 import Data.List (List)
 import Data.Maybe (Maybe(..))
+import Data.Newtype (class Newtype, un)
 import Data.StrMap (StrMap)
 
 --import Control.Applicative
@@ -695,6 +696,7 @@ toURLEntity ueURL ueExpanded ueDisplay =
   URLEntity { ueURL, ueExpanded, ueDisplay }
 
 derive instance genericURLEntity :: Generic URLEntity _
+derive instance newtypeURLEntity :: Newtype URLEntity _
 instance eqURLEntity :: Eq URLEntity where eq = genericEq
 instance showURLEntity :: Show URLEntity where show = genericShow
 
@@ -716,51 +718,73 @@ instance encodeJsonURLEntity :: EncodeJson URLEntity where
     jsonEmptyObject
 
 
+newtype MediaEntity = MediaEntity
+  { meType :: String
+  , meId :: StatusId
+  , meSizes :: StrMap MediaSize
+  , meMediaURL :: URIString
+  , meMediaURLHttps :: URIString
+  , meURL :: URLEntity
+  }
 
---data MediaEntity =
---    MediaEntity
---    { meType :: Text
---    , meId :: StatusId
---    , meSizes :: HashMap Text MediaSize
---    , meMediaURL :: URIString
---    , meMediaURLHttps :: URIString
---    , meURL :: URLEntity
---    } deriving (Show, Eq, Data, Typeable, Generic)
+toMediaEntity
+  :: String
+  -> StatusId
+  -> StrMap MediaSize
+  -> URIString
+  -> URIString
+  -> URLEntity
+  -> MediaEntity
+toMediaEntity meType meId meSizes meMediaURL meMediaURLHttps meURL =
+  MediaEntity {meType, meId, meSizes, meMediaURL, meMediaURLHttps, meURL}
 
---instance FromJSON MediaEntity where
---    parseJSON v@(Object o) =
---        MediaEntity <$> o .: "type"
---                    <*> o .: "id"
---                    <*> o .: "sizes"
---                    <*> o .: "media_url"
---                    <*> o .: "media_url_https"
---                    <*> parseJSON v
---    parseJSON v = fail $ "couldn't parse media entity from: " ++ show v
+derive instance genericMediaEntity :: Generic MediaEntity _
+derive instance newtypeMediaEntity :: Newtype MediaEntity _
+instance eqMediaEntity :: Eq MediaEntity where eq = genericEq
+instance showMediaEntity :: Show MediaEntity where show = genericShow
 
---instance ToJSON MediaEntity where
---    toJSON MediaEntity{..} = object [ "type"            .= meType
---                                    , "id"              .= meId
---                                    , "sizes"           .= meSizes
---                                    , "media_url"       .= meMediaURL
---                                    , "media_url_https" .= meMediaURLHttps
---                                    , "url"             .= ueURL meURL
---                                    , "expanded_url"    .= ueExpanded meURL
---                                    , "display_url"     .= ueDisplay meURL
---                                    ]
+instance decodeJsonMediaEntity :: DecodeJson MediaEntity where
+  -- decodeJson :: Json -> Either String MediaEntity
+  decodeJson json =
+    foldJsonObject (Left "not a JObject (MediaEntity)") f json
+    where
+      f :: JObject -> Either String MediaEntity
+      f o =
+        toMediaEntity
+          <$> o .? "type"
+          <*> o .? "id"
+          <*> o .? "sizes"
+          <*> o .? "media_url"
+          <*> o .? "media_url_https"
+          <*> decodeJson json
+
+instance encodeJsonMediaEntity :: EncodeJson MediaEntity where
+  -- encodeJson :: MediaEntity -> Json
+  encodeJson (MediaEntity mediaEntity) =
+    "type" := mediaEntity.meType ~>
+    "id" := mediaEntity.meId ~>
+    "sizes" := mediaEntity.meSizes ~>
+    "media_url" := mediaEntity.meMediaURL ~>
+    "media_url_https" := mediaEntity.meMediaURLHttps ~>
+    "url" := _.ueURL (un URLEntity mediaEntity.meURL) ~>
+    "expanded_url" := _.ueExpanded (un URLEntity mediaEntity.meURL) ~>
+    "dislay_url" := _.ueDisplay (un URLEntity mediaEntity.meURL) ~>
+    jsonEmptyObject
 
 -- | Size entity.
 -- See <https://dev.twitter.com/docs/platform-objects/entities#obj-size>.
 newtype MediaSize = MediaSize
-    { msWidth :: Int
-    , msHeight :: Int
-    , msResize :: String
-    }
+  { msWidth :: Int
+  , msHeight :: Int
+  , msResize :: String
+  }
 
 toMediaSize :: Int -> Int -> String -> MediaSize
 toMediaSize msWidth msHeight msResize =
   MediaSize { msWidth, msHeight, msResize }
 
 derive instance genericMediaSize :: Generic MediaSize _
+derive instance newtypeMediaSize :: Newtype MediaSize _
 instance eqMediaSize :: Eq MediaSize where eq = genericEq
 instance showMediaSize :: Show MediaSize where show = genericShow
 
@@ -782,9 +806,9 @@ instance encodeJsonMediaSize :: EncodeJson MediaSize where
     jsonEmptyObject
 
 newtype Coordinates = Coordinates
-    { coordinates :: Array Number
-    , coordinatesType :: String
-    }
+  { coordinates :: Array Number
+  , coordinatesType :: String
+  }
 
 toCoordinates :: Array Number -> String -> Coordinates
 toCoordinates coord t =
@@ -794,6 +818,7 @@ toCoordinates coord t =
     }
 
 derive instance genericCoordinates :: Generic Coordinates _
+derive instance newtypeCoordinates :: Newtype Coordinates _
 instance eqCoordinates :: Eq Coordinates where eq = genericEq
 instance showCoordinates :: Show Coordinates where show = genericShow
 
@@ -851,6 +876,7 @@ toPlace attr bb country cc fullname plid name t url =
     }
 
 derive instance genericPlace :: Generic Place _
+derive instance newtypePlace :: Newtype Place _
 instance eqPlace :: Eq Place where eq = genericEq
 instance showPlace :: Show Place where show = genericShow
 
@@ -898,6 +924,7 @@ toBoundingBox coord t =
     }
 
 derive instance genericBoundingBox :: Generic BoundingBox _
+derive instance newtypeBoundingBox :: Newtype BoundingBox _
 instance eqBoundingBox :: Eq BoundingBox where eq = genericEq
 instance showBoundingBox :: Show BoundingBox where show = genericShow
 
@@ -977,6 +1004,7 @@ toContributor contribId screenName =
     }
 
 derive instance genericContributor :: Generic Contributor _
+derive instance newtypeContributor :: Newtype Contributor _
 instance eqContributor :: Eq Contributor where eq = genericEq
 instance showContributor :: Show Contributor where show = genericShow
 
@@ -1030,6 +1058,7 @@ toImageSizeType w h t =
     }
 
 derive instance genericImageSizeType :: Generic ImageSizeType _
+derive instance newtypeImageSizeType :: Newtype ImageSizeType _
 instance eqImageSizeType :: Eq ImageSizeType where eq = genericEq
 instance showImageSizeType :: Show ImageSizeType where show = genericShow
 
@@ -1052,7 +1081,7 @@ instance encodeJsonImageSizeType :: EncodeJson ImageSizeType where
 
 -- | This type is represents the API response of \"\/1.1\/media\/upload.json\".
 -- See <https://dev.twitter.com/docs/api/multiple-media-extended-entities>.
-data UploadedMedia = UploadedMedia
+newtype UploadedMedia = UploadedMedia
     { uploadedMediaId :: Int
     , uploadedMediaSize :: Int
     , uploadedMediaImage :: ImageSizeType
@@ -1067,6 +1096,7 @@ toUploadedMedia mediaId size image =
     }
 
 derive instance genericUploadedMedia :: Generic UploadedMedia _
+derive instance newtypeUploadedMedia :: Newtype UploadedMedia _
 instance eqUploadedMedia :: Eq UploadedMedia where eq = genericEq
 instance showUploadedMedia :: Show UploadedMedia where show = genericShow
 
