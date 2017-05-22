@@ -747,7 +747,7 @@ instance showHashTagEntity :: Show HashTagEntity where show = genericShow
 instance decodeJsonHashTagEntity :: DecodeJson HashTagEntity where
   -- decodeJson :: Json -> Either String HashTagEntity
   decodeJson =
-    foldJsonObject (Left "not a JObject (HashTagEntity)") $ \o ->
+    foldJsonObject (Left "not a JObject (HashTagEntity)") \o ->
       toHashTagEntity <$> o .? "text"
 
 instance encodeJsonHashTagEntity :: EncodeJson HashTagEntity where
@@ -776,7 +776,7 @@ instance showUserEntity :: Show UserEntity where show = genericShow
 instance decodeJsonUserEntity :: DecodeJson UserEntity where
   -- decodeJson :: Json -> Either String UserEntity
   decodeJson =
-    foldJsonObject (Left "not a JObject (UserEntity)") $ \o ->
+    foldJsonObject (Left "not a JObject (UserEntity)") \o ->
       toUserEntity
         <$> o .? "id"
         <*> o .? "name"
@@ -813,7 +813,7 @@ instance showURLEntity :: Show URLEntity where show = genericShow
 instance decodeJsonURLEntity :: DecodeJson URLEntity where
   -- decodeJson :: Json -> Either String URLEntity
   decodeJson =
-    foldJsonObject (Left "not a JObject (URLEntity)") $ \o ->
+    foldJsonObject (Left "not a JObject (URLEntity)") \o ->
       toURLEntity
         <$> o .? "url"
         <*> o .? "expanded_url"
@@ -901,7 +901,7 @@ instance showMediaSize :: Show MediaSize where show = genericShow
 instance decodeJsonMediaSize :: DecodeJson MediaSize where
   -- decodeJson :: Json -> Either String MediaSize
   decodeJson =
-    foldJsonObject (Left "not a JObject (MediaSize)") $ \o ->
+    foldJsonObject (Left "not a JObject (MediaSize)") \o ->
       toMediaSize
         <$> o .? "w"
         <*> o .? "h"
@@ -935,7 +935,7 @@ instance showCoordinates :: Show Coordinates where show = genericShow
 instance decodeJsonCoordinates :: DecodeJson Coordinates where
   -- decodeJson :: Json -> Either String Coordinates
   decodeJson =
-    foldJsonObject (Left "not a JObject (Coordinates)") $ \o ->
+    foldJsonObject (Left "not a JObject (Coordinates)") \o ->
       toCoordinates
         <$> o .? "coordinates"
         <*> o .? "type"
@@ -993,7 +993,7 @@ instance showPlace :: Show Place where show = genericShow
 instance decodeJsonPlace :: DecodeJson Place where
   -- decodeJson :: Json -> Either String Place
   decodeJson =
-    foldJsonObject (Left "not a JObject (Place)") $ \o ->
+    foldJsonObject (Left "not a JObject (Place)") \o ->
       toPlace
         <$> o .? "attributes"
         <*> o .?? "bounding_box"
@@ -1041,7 +1041,7 @@ instance showBoundingBox :: Show BoundingBox where show = genericShow
 instance decodeJsonBoundingBox :: DecodeJson BoundingBox where
   -- decodeJson :: Json -> Either String BoundingBox
   decodeJson =
-    foldJsonObject (Left "not a JObject (BoundingBox)") $ \o ->
+    foldJsonObject (Left "not a JObject (BoundingBox)") \o ->
       toBoundingBox
         <$> o .? "coordinates"
         <*> o .? "type"
@@ -1175,7 +1175,7 @@ instance showImageSizeType :: Show ImageSizeType where show = genericShow
 instance decodeJsonImageSizeType :: DecodeJson ImageSizeType where
   -- decodeJson :: Json -> Either String ImageSizeType
   decodeJson =
-    foldJsonObject (Left "not a JObject (ImageSizeType)") $ \o ->
+    foldJsonObject (Left "not a JObject (ImageSizeType)") \o ->
       toImageSizeType
         <$> o .? "w"
         <*> o .? "h"
@@ -1213,7 +1213,7 @@ instance showUploadedMedia :: Show UploadedMedia where show = genericShow
 instance decodeJsonUploadedMedia :: DecodeJson UploadedMedia where
   -- decodeJson :: Json -> Either String UploadedMedia
   decodeJson =
-    foldJsonObject (Left "not a JObject (UploadedMedia)") $ \o ->
+    foldJsonObject (Left "not a JObject (UploadedMedia)") \o ->
       toUploadedMedia
         <$> o .? "media_id"
         <*> o .? "size"
