@@ -810,24 +810,36 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --                              , "url"           .= placeURL
 --                              ]
 
----- | A bounding box of coordinates which encloses the place.
----- See <https://dev.twitter.com/docs/platform-objects/places#obj-boundingbox>.
---data BoundingBox =
---    BoundingBox
---    { boundingBoxCoordinates  :: [[[Double]]]
---    , boundingBoxType         :: Text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype BoundingBox = BoundingBox
+    { boundingBoxCoordinates :: Array (Array (Array Number))
+    , boundingBoxType :: String
+    }
 
---instance FromJSON BoundingBox where
---    parseJSON (Object o) =
---        BoundingBox <$> o .: "coordinates"
---                    <*> o .: "type"
---    parseJSON v = fail $ "couldn't parse bounding box from: " ++ show v
+toBoundingBox :: Array (Array (Array Number)) -> String -> BoundingBox
+toBoundingBox coord t =
+  BoundingBox
+    { boundingBoxCoordinates: coord
+    , boundingBoxType: t
+    }
 
---instance ToJSON BoundingBox where
---    toJSON BoundingBox{..} = object [ "coordinates" .= boundingBoxCoordinates
---                                    , "type"        .= boundingBoxType
---                                    ]
+derive instance genericBoundingBox :: Generic BoundingBox _
+instance eqBoundingBox :: Eq BoundingBox where eq = genericEq
+instance showBoundingBox :: Show BoundingBox where show = genericShow
+
+instance decodeJsonBoundingBox :: DecodeJson BoundingBox where
+  -- decodeJson :: Json -> Either String BoundingBox
+  decodeJson =
+    foldJsonObject (Left "not a JObject (BoundingBox)") $ \o ->
+      toBoundingBox
+        <$> o .? "coordinates"
+        <*> o .? "type"
+
+instance encodeJsonBoundingBox :: EncodeJson BoundingBox where
+  -- encodeJson :: BoundingBox -> Json
+  encodeJson (BoundingBox boundingBox) =
+    "coordinates" := boundingBox.boundingBoxCoordinates ~>
+    "type" := boundingBox.boundingBoxType ~>
+    jsonEmptyObject
 
 ---- | Entity handling.
 ---- See <https://dev.twitter.com/docs/platform-objects/entities>.
@@ -925,19 +937,6 @@ instance encodeJsonContributor :: EncodeJson Contributor where
     "id" := contributor.contributorId ~>
     "screen_name" := contributor.contributorScreenName ~>
     jsonEmptyObject
-
---instance FromJSON Contributor where
---    parseJSON (Object o) =
---        Contributor <$>  o .:  "id"
---                    <*>  o .:?  "screen_name"
---    parseJSON v@(Number _) =
---        Contributor <$> parseJSON v <*> pure Nothing
---    parseJSON v = fail $ "couldn't parse contributor from: " ++ show v
-
---instance ToJSON Contributor where
---    toJSON Contributor{..} = object [ "id"          .= contributorId
---                                    , "screen_name" .= contributorScreenName
---                                    ]
 
 -- | Image size type. This type is included in the API response of
 -- \"\/1.1\/media\/upload.json\".
