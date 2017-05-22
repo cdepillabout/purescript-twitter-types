@@ -658,27 +658,39 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --instance ToJSON HashTagEntity where
 --    toJSON HashTagEntity{..} = object [ "text" .= hashTagText ]
 
----- | User mention entity.
----- See <https://dev.twitter.com/docs/platform-objects/entities#obj-usermention>.
---data UserEntity =
---    UserEntity
---    { userEntityUserId              :: UserId
---    , userEntityUserName            :: UserName
---    , userEntityUserScreenName      :: Text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+-- | User mention entity.
+-- See <https://dev.twitter.com/docs/platform-objects/entities#obj-usermention>.
+newtype UserEntity = UserEntity
+  { userEntityUserId :: UserId
+  , userEntityUserName :: UserName
+  , userEntityUserScreenName :: String
+   }
 
---instance FromJSON UserEntity where
---    parseJSON (Object o) =
---        UserEntity <$> o .:  "id"
---                   <*> o .:  "name"
---                   <*> o .:  "screen_name"
---    parseJSON v = fail $ "couldn't parse user entity from: " ++ show v
+toUserEntity :: UserId -> UserName -> String -> UserEntity
+toUserEntity userEntityUserId userEntityUserName userEntityUserScreenName =
+  UserEntity { userEntityUserId, userEntityUserName, userEntityUserScreenName }
 
---instance ToJSON UserEntity where
---    toJSON UserEntity{..} = object [ "id"           .= userEntityUserId
---                                   , "name"         .= userEntityUserName
---                                   , "screen_name"  .= userEntityUserScreenName
---                                   ]
+derive instance genericUserEntity :: Generic UserEntity _
+derive instance newtypeUserEntity :: Newtype UserEntity _
+instance eqUserEntity :: Eq UserEntity where eq = genericEq
+instance showUserEntity :: Show UserEntity where show = genericShow
+
+instance decodeJsonUserEntity :: DecodeJson UserEntity where
+  -- decodeJson :: Json -> Either String UserEntity
+  decodeJson =
+    foldJsonObject (Left "not a JObject (UserEntity)") $ \o ->
+      toUserEntity
+        <$> o .? "id"
+        <*> o .? "name"
+        <*> o .? "screen_name"
+
+instance encodeJsonUserEntity :: EncodeJson UserEntity where
+  -- encodeJson :: UserEntity -> Json
+  encodeJson (UserEntity userEntity) =
+    "id" := userEntity.userEntityUserId ~>
+    "name" := userEntity.userEntityUserName ~>
+    "screen_name" := userEntity.userEntityUserScreenName ~>
+    jsonEmptyObject
 
 -- | URL entity.
 -- | See <https://dev.twitter.com/docs/platform-objects/entities#obj-url>.
