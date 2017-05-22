@@ -679,27 +679,43 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --                                   , "screen_name"  .= userEntityUserScreenName
 --                                   ]
 
----- | URL entity.
----- See <https://dev.twitter.com/docs/platform-objects/entities#obj-url>.
---data URLEntity =
---    URLEntity
---    { ueURL      :: URIString -- ^ The URL that was extracted
---    , ueExpanded :: URIString -- ^ The fully resolved URL (only for t.co links)
---    , ueDisplay  :: Text    -- ^ Not a URL but a string to display instead of the URL (only for t.co links)
---    } deriving (Show, Eq, Data, Typeable, Generic)
+-- | URL entity.
+-- | See <https://dev.twitter.com/docs/platform-objects/entities#obj-url>.
+newtype URLEntity = URLEntity
+  { ueURL :: URIString
+    -- ^ The URL that was extracted
+  , ueExpanded :: URIString
+    -- ^ The fully resolved URL (only for t.co links)
+  , ueDisplay :: String
+    -- ^ Not a URL but a string to display instead of the URL (only for t.co links)
+   }
 
---instance FromJSON URLEntity where
---    parseJSON (Object o) =
---        URLEntity <$> o .:  "url"
---                  <*> o .:  "expanded_url"
---                  <*> o .:  "display_url"
---    parseJSON v = fail $ "couldn't parse url entity from: " ++ show v
+toURLEntity :: URIString -> URIString -> String -> URLEntity
+toURLEntity ueURL ueExpanded ueDisplay =
+  URLEntity { ueURL, ueExpanded, ueDisplay }
 
---instance ToJSON URLEntity where
---    toJSON URLEntity{..} = object [ "url"           .= ueURL
---                                  , "expanded_url"  .= ueExpanded
---                                  , "display_url"   .= ueDisplay
---                                  ]
+derive instance genericURLEntity :: Generic URLEntity _
+instance eqURLEntity :: Eq URLEntity where eq = genericEq
+instance showURLEntity :: Show URLEntity where show = genericShow
+
+instance decodeJsonURLEntity :: DecodeJson URLEntity where
+  -- decodeJson :: Json -> Either String URLEntity
+  decodeJson =
+    foldJsonObject (Left "not a JObject (URLEntity)") $ \o ->
+      toURLEntity
+        <$> o .? "url"
+        <*> o .? "expanded_url"
+        <*> o .? "display_url"
+
+instance encodeJsonURLEntity :: EncodeJson URLEntity where
+  -- encodeJson :: URLEntity -> Json
+  encodeJson (URLEntity urlEntity) =
+    "url" := urlEntity.ueURL ~>
+    "expanded_url" := urlEntity.ueExpanded ~>
+    "display_url" := urlEntity.ueDisplay ~>
+    jsonEmptyObject
+
+
 
 --data MediaEntity =
 --    MediaEntity
