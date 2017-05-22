@@ -643,20 +643,32 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --                             , "user"               .= listUser
 --                             ]
 
----- | Hashtag entity.
----- See <https://dev.twitter.com/docs/platform-objects/entities#obj-hashtags>.
---data HashTagEntity =
---    HashTagEntity
---    { hashTagText :: Text -- ^ The Hashtag text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+-- | Hashtag entity.
+-- See <https://dev.twitter.com/docs/platform-objects/entities#obj-hashtags>.
+newtype HashTagEntity = HashTagEntity
+  { hashTagText :: String
+  }
 
---instance FromJSON HashTagEntity where
---    parseJSON (Object o) =
---        HashTagEntity <$> o .: "text"
---    parseJSON v = fail $ "couldn't parse hashtag entity from: " ++ show v
+toHashTagEntity :: String -> HashTagEntity
+toHashTagEntity hashTagText =
+  HashTagEntity {hashTagText}
 
---instance ToJSON HashTagEntity where
---    toJSON HashTagEntity{..} = object [ "text" .= hashTagText ]
+derive instance genericHashTagEntity :: Generic HashTagEntity _
+derive instance newtypeHashTagEntity :: Newtype HashTagEntity _
+instance eqHashTagEntity :: Eq HashTagEntity where eq = genericEq
+instance showHashTagEntity :: Show HashTagEntity where show = genericShow
+
+instance decodeJsonHashTagEntity :: DecodeJson HashTagEntity where
+  -- decodeJson :: Json -> Either String HashTagEntity
+  decodeJson =
+    foldJsonObject (Left "not a JObject (HashTagEntity)") $ \o ->
+      toHashTagEntity <$> o .? "text"
+
+instance encodeJsonHashTagEntity :: EncodeJson HashTagEntity where
+  -- encodeJson :: HashTagEntity -> Json
+  encodeJson (HashTagEntity hashTagEntity) =
+    "text" := hashTagEntity.hashTagText ~>
+    jsonEmptyObject
 
 -- | User mention entity.
 -- See <https://dev.twitter.com/docs/platform-objects/entities#obj-usermention>.
@@ -664,11 +676,11 @@ newtype UserEntity = UserEntity
   { userEntityUserId :: UserId
   , userEntityUserName :: UserName
   , userEntityUserScreenName :: String
-   }
+  }
 
 toUserEntity :: UserId -> UserName -> String -> UserEntity
 toUserEntity userEntityUserId userEntityUserName userEntityUserScreenName =
-  UserEntity { userEntityUserId, userEntityUserName, userEntityUserScreenName }
+  UserEntity {userEntityUserId, userEntityUserName, userEntityUserScreenName}
 
 derive instance genericUserEntity :: Generic UserEntity _
 derive instance newtypeUserEntity :: Newtype UserEntity _
