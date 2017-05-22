@@ -102,6 +102,11 @@ checkError o = do
     go (Right msg) = Left msg
     go (Left _) = Right unit
 
+checkError'
+  :: forall a. (JObject -> Either String a) -> JObject -> Either String a
+checkError' realFunc o =
+  checkError o *> realFunc o
+
 twitterTimeFormat :: String
 twitterTimeFormat = "%a %b %d %T %z %Y"
 -- Sat Jun 14 10:15:19 +0000 2014
@@ -290,6 +295,76 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --                                     , "user"           .= searchStatusUser
 --                                     , "coordinates"    .= searchStatusCoordinates
 --                                     ]
+
+newtype SearchMetadata = SearchMetadata
+  { searchMetadataMaxId :: StatusId
+  , searchMetadataSinceId :: StatusId
+  , searchMetadataRefreshURL :: URIString
+  , searchMetadataNextResults :: Maybe URIString
+  , searchMetadataCount :: Int
+  , searchMetadataCompletedIn :: Maybe Number
+  , searchMetadataSinceIdStr :: String
+  , searchMetadataQuery :: String
+  , searchMetadataMaxIdStr :: String
+  }
+
+toSearchMetadata
+  :: StatusId
+  -> StatusId
+  -> URIString
+  -> Maybe URIString
+  -> Int
+  -> Maybe Number
+  -> String
+  -> String
+  -> String
+  -> SearchMetadata
+toSearchMetadata searchMetadataMaxId searchMetadataSinceId searchMetadataRefreshURL searchMetadataNextResults searchMetadataCount searchMetadataCompletedIn searchMetadataSinceIdStr searchMetadataQuery searchMetadataMaxIdStr =
+  SearchMetadata
+    { searchMetadataMaxId
+    , searchMetadataSinceId
+    , searchMetadataRefreshURL
+    , searchMetadataNextResults
+    , searchMetadataCount
+    , searchMetadataCompletedIn
+    , searchMetadataSinceIdStr
+    , searchMetadataQuery
+    , searchMetadataMaxIdStr
+    }
+
+derive instance genericSearchMetadata :: Generic SearchMetadata _
+derive instance newtypeSearchMetadata :: Newtype SearchMetadata _
+instance eqSearchMetadata :: Eq SearchMetadata where eq = genericEq
+instance showSearchMetadata :: Show SearchMetadata where show = genericShow
+
+instance decodeJsonSearchMetadata :: DecodeJson SearchMetadata where
+  -- decodeJson :: Json -> Either String SearchMetadata
+  decodeJson =
+    foldJsonObject (Left "not a JObject (SearchMetadata)") $ checkError' \o ->
+      toSearchMetadata
+        <$> o .? "max_id"
+        <*> o .? "since_id"
+        <*> o .? "refresh_url"
+        <*> o .?? "next_results"
+        <*> o .? "count"
+        <*> o .?? "completed_id"
+        <*> o .? "since_id_str"
+        <*> o .? "query"
+        <*> o .? "max_id_str"
+
+instance encodeJsonSearchMetadata :: EncodeJson SearchMetadata where
+  -- encodeJson :: SearchMetadata -> Json
+  encodeJson (SearchMetadata searchMetadata) =
+    "max_id" := searchMetadata.searchMetadataMaxId ~>
+    "since_id" := searchMetadata.searchMetadataSinceId ~>
+    "refresh_url" := searchMetadata.searchMetadataRefreshURL ~>
+    "next_results" := searchMetadata.searchMetadataNextResults ~>
+    "count" := searchMetadata.searchMetadataCount ~>
+    "completed_in" := searchMetadata.searchMetadataCompletedIn ~>
+    "since_id_str" := searchMetadata.searchMetadataSinceIdStr ~>
+    "query" := searchMetadata.searchMetadataQuery ~>
+    "max_id_str" := searchMetadata.searchMetadataMaxIdStr ~>
+    jsonEmptyObject
 
 --data SearchMetadata =
 --    SearchMetadata
