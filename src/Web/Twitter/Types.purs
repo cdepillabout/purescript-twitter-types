@@ -732,27 +732,38 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --                                    , "display_url"     .= ueDisplay meURL
 --                                    ]
 
----- | Size entity.
----- See <https://dev.twitter.com/docs/platform-objects/entities#obj-size>.
---data MediaSize =
---    MediaSize
---    { msWidth :: Int
---    , msHeight :: Int
---    , msResize :: Text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+-- | Size entity.
+-- See <https://dev.twitter.com/docs/platform-objects/entities#obj-size>.
+newtype MediaSize = MediaSize
+    { msWidth :: Int
+    , msHeight :: Int
+    , msResize :: String
+    }
 
---instance FromJSON MediaSize where
---    parseJSON (Object o) =
---        MediaSize <$> o .: "w"
---                  <*> o .: "h"
---                  <*> o .: "resize"
---    parseJSON v = fail $ "couldn't parse media size from: " ++ show v
+toMediaSize :: Int -> Int -> String -> MediaSize
+toMediaSize msWidth msHeight msResize =
+  MediaSize { msWidth, msHeight, msResize }
 
---instance ToJSON MediaSize where
---    toJSON MediaSize{..} = object [ "w"      .= msWidth
---                                  , "h"      .= msHeight
---                                  , "resize" .= msResize
---                                  ]
+derive instance genericMediaSize :: Generic MediaSize _
+instance eqMediaSize :: Eq MediaSize where eq = genericEq
+instance showMediaSize :: Show MediaSize where show = genericShow
+
+instance decodeJsonMediaSize :: DecodeJson MediaSize where
+  -- decodeJson :: Json -> Either String MediaSize
+  decodeJson =
+    foldJsonObject (Left "not a JObject (MediaSize)") $ \o ->
+      toMediaSize
+        <$> o .? "w"
+        <*> o .? "h"
+        <*> o .? "resize"
+
+instance encodeJsonMediaSize :: EncodeJson MediaSize where
+  -- encodeJson :: MediaSize -> Json
+  encodeJson (MediaSize mediaSize) =
+    "w" := mediaSize.msWidth ~>
+    "h" := mediaSize.msHeight ~>
+    "resize" := mediaSize.msResize ~>
+    jsonEmptyObject
 
 newtype Coordinates = Coordinates
     { coordinates :: Array Number
