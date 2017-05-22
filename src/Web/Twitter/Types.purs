@@ -50,6 +50,7 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.Int (fromNumber)
 import Data.List (List)
 import Data.Maybe (Maybe(..))
+import Data.StrMap (StrMap)
 
 --import Control.Applicative
 --import Control.Monad
@@ -753,63 +754,110 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 --                                  , "resize" .= msResize
 --                                  ]
 
---data Coordinates =
---    Coordinates
---    { coordinates :: [Double]
---    , coordinatesType :: Text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype Coordinates = Coordinates
+    { coordinates :: Array Number
+    , coordinatesType :: String
+    }
 
---instance FromJSON Coordinates where
---    parseJSON (Object o) =
---        Coordinates <$> o .: "coordinates"
---                    <*> o .: "type"
---    parseJSON v = fail $ "couldn't parse coordinates from: " ++ show v
+toCoordinates :: Array Number -> String -> Coordinates
+toCoordinates coord t =
+  Coordinates
+    { coordinates: coord
+    , coordinatesType: t
+    }
 
---instance ToJSON Coordinates where
---    toJSON Coordinates{..} = object [ "coordinates" .= coordinates
---                                    , "type"        .= coordinatesType
---                                    ]
+derive instance genericCoordinates :: Generic Coordinates _
+instance eqCoordinates :: Eq Coordinates where eq = genericEq
+instance showCoordinates :: Show Coordinates where show = genericShow
 
----- | This type represents a place, named locations with corresponding geo coordinates.
----- See <https://dev.twitter.com/docs/platform-objects/places>.
---data Place =
---    Place
---    { placeAttributes   :: HashMap Text Text
---    , placeBoundingBox  :: Maybe BoundingBox
---    , placeCountry      :: Text
---    , placeCountryCode  :: Text
---    , placeFullName     :: Text
---    , placeId           :: Text
---    , placeName         :: Text
---    , placeType         :: Text
---    , placeURL          :: Text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+instance decodeJsonCoordinates :: DecodeJson Coordinates where
+  -- decodeJson :: Json -> Either String Coordinates
+  decodeJson =
+    foldJsonObject (Left "not a JObject (Coordinates)") $ \o ->
+      toCoordinates
+        <$> o .? "coordinates"
+        <*> o .? "type"
 
---instance FromJSON Place where
---    parseJSON (Object o) =
---        Place <$> o .: "attributes"
---              <*> o .:? "bounding_box"
---              <*> o .: "country"
---              <*> o .: "country_code"
---              <*> o .: "full_name"
---              <*> o .: "id"
---              <*> o .: "name"
---              <*> o .: "place_type"
---              <*> o .: "url"
---    parseJSON v = fail $ "couldn't parse place from: " ++ show v
+instance encodeJsonCoordinates :: EncodeJson Coordinates where
+  -- encodeJson :: Coordinates -> Json
+  encodeJson (Coordinates coordinates) =
+    "coordinates" := coordinates.coordinates ~>
+    "type" := coordinates.coordinatesType ~>
+    jsonEmptyObject
 
---instance ToJSON Place where
---    toJSON Place{..} = object [ "attributes"    .= placeAttributes
---                              , "bounding_box"  .= placeBoundingBox
---                              , "country"       .= placeCountry
---                              , "country_code"  .= placeCountryCode
---                              , "full_name"     .= placeFullName
---                              , "id"            .= placeId
---                              , "name"          .= placeName
---                              , "place_type"    .= placeType
---                              , "url"           .= placeURL
---                              ]
+-- | This type represents a place, named locations with corresponding geo coordinates.
+-- | See <https://dev.twitter.com/docs/platform-objects/places>.
+newtype Place = Place
+  { placeAttributes :: StrMap String
+  , placeBoundingBox :: Maybe BoundingBox
+  , placeCountry :: String
+  , placeCountryCode :: String
+  , placeFullName :: String
+  , placeId :: String
+  , placeName :: String
+  , placeType :: String
+  , placeURL :: String
+  }
 
+toPlace
+  :: StrMap String
+  -> Maybe BoundingBox
+  -> String
+  -> String
+  -> String
+  -> String
+  -> String
+  -> String
+  -> String
+  -> Place
+toPlace attr bb country cc fullname plid name t url =
+  Place
+    { placeAttributes: attr
+    , placeBoundingBox: bb
+    , placeCountry: country
+    , placeCountryCode: cc
+    , placeFullName: fullname
+    , placeId: plid
+    , placeName: name
+    , placeType: t
+    , placeURL: url
+    }
+
+derive instance genericPlace :: Generic Place _
+instance eqPlace :: Eq Place where eq = genericEq
+instance showPlace :: Show Place where show = genericShow
+
+instance decodeJsonPlace :: DecodeJson Place where
+  -- decodeJson :: Json -> Either String Place
+  decodeJson =
+    foldJsonObject (Left "not a JObject (Place)") $ \o ->
+      toPlace
+        <$> o .? "attributes"
+        <*> o .?? "bounding_box"
+        <*> o .? "country"
+        <*> o .? "country_code"
+        <*> o .? "full_name"
+        <*> o .? "id"
+        <*> o .? "name"
+        <*> o .? "place_type"
+        <*> o .? "url"
+
+instance encodeJsonPlace :: EncodeJson Place where
+  -- encodeJson :: Place -> Json
+  encodeJson (Place place) =
+    "attributes" := place.placeAttributes ~>
+    "bounding_box" := place.placeBoundingBox ~>
+    "country" := place.placeCountry ~>
+    "country_code" := place.placeCountryCode ~>
+    "full_name" := place.placeFullName ~>
+    "id" := place.placeId ~>
+    "name" := place.placeName ~>
+    "place_type" := place.placeType ~>
+    "url" := place.placeURL ~>
+    jsonEmptyObject
+
+-- | A bounding box of coordinates which encloses the place.
+-- See <https://dev.twitter.com/docs/platform-objects/places#obj-boundingbox>.
 newtype BoundingBox = BoundingBox
     { boundingBoxCoordinates :: Array (Array (Array Number))
     , boundingBoxType :: String
