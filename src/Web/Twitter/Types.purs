@@ -39,8 +39,9 @@ module Web.Twitter.Types
 import Prelude
 
 import Data.Argonaut
-  (class DecodeJson, class EncodeJson, JNumber, JObject, (.?), (:=), (~>),
-   decodeJson, foldJson, foldJsonObject, jsonEmptyObject)
+  (class DecodeJson, class EncodeJson, JNumber, JObject, (.?),
+   (:=), (~>), decodeJson, foldJson, foldJsonObject, foldJsonString, fromString,
+   jsonEmptyObject)
 import Data.Argonaut.Decode.Combinators ((.??))
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
@@ -99,8 +100,12 @@ checkError'
 checkError' realFunc o =
   checkError o *> realFunc o
 
+
+
 -- | This is a time format displayed in a specific way.  See the function
--- `twitterTimeFormat` for an example of this.
+-- | `twitterTimeFormat` for an example of this.
+-- |
+-- | This needs to actually be implemented.
 newtype TwitterTime = TwitterTime DateTime
 --newtype TwitterTime = TwitterTime { fromTwitterTime :: UTCTime }
 
@@ -117,24 +122,6 @@ derive instance newtypeTwitterTime :: Newtype TwitterTime _
 instance eqTwitterTime :: Eq TwitterTime where eq = genericEq
 instance showTwitterTime :: Show TwitterTime where show = genericShow
 
--- | This is a "normal" `DateTime` with a FromJSON and ToJSON instance just
--- | like Haskell's UTCTime.
--- |
--- | TODO: For now, we are going to leave this as a String so we don't have to
--- | figure out how to parse it.  But it should be parsed just like the
--- | `FromJSON` and `ToJSON` instances for Haskell's UTCTime.
-newtype NormalDateTime = NormalDateTime String
--- newtype NormalDateTime = NormalDateTime DateTime
-
-derive instance genericNormalDateTime :: Generic NormalDateTime _
-derive instance newtypeNormalDateTime :: Newtype NormalDateTime _
-instance eqNormalDateTime :: Eq NormalDateTime where eq = genericEq
-instance showNormalDateTime :: Show NormalDateTime where show = genericShow
-
-fromNormalDateTime :: NormalDateTime -> String
-fromNormalDateTime (NormalDateTime s) = s
-
-
 --instance FromJSON TwitterTime where
 --    parseJSON = withText "TwitterTime" $ \t ->
 --#if MIN_VERSION_time(1, 5, 0)
@@ -147,6 +134,49 @@ fromNormalDateTime (NormalDateTime s) = s
 
 --instance ToJSON TwitterTime where
 --    toJSON t = String $ pack $ formatTime defaultTimeLocale twitterTimeFormat $ fromTwitterTime t
+
+
+
+newtype HackyWrapperShouldBeTwitterTime = HackyWrapperShouldBeTwitterTime HackyDateTime
+--newtype TwitterTime = TwitterTime { fromTwitterTime :: UTCTime }
+
+fromHackyWrapperShouldBeTwitterTime :: HackyWrapperShouldBeTwitterTime -> HackyDateTime
+fromHackyWrapperShouldBeTwitterTime (HackyWrapperShouldBeTwitterTime hackyDateTime) =
+  hackyDateTime
+
+derive instance genericHackyWrapperShouldBeTwitterTime :: Generic HackyWrapperShouldBeTwitterTime _
+derive instance newtypeHackyWrapperShouldBeTwitterTime :: Newtype HackyWrapperShouldBeTwitterTime _
+instance eqHackyWrapperShouldBeTwitterTime :: Eq HackyWrapperShouldBeTwitterTime where eq = genericEq
+instance showHackyWrapperShouldBeTwitterTime :: Show HackyWrapperShouldBeTwitterTime where show = genericShow
+
+
+instance decodeJsonHackyWrapperShouldBeTwitterTime :: DecodeJson HackyWrapperShouldBeTwitterTime where
+  -- decodeJson :: Json -> Either String HackyWrapperShouldBeTwitterTime
+  decodeJson =
+    foldJsonString (Left "not a JString (HackyWrapperShouldBeTwitterTime)") \s ->
+      Right $ HackyWrapperShouldBeTwitterTime $ HackyDateTime s
+
+instance encodeJsonHackyWrapperShouldBeTwitterTime :: EncodeJson HackyWrapperShouldBeTwitterTime where
+  -- encodeJson :: HackyWrapperShouldBeTwitterTime -> Json
+  encodeJson (HackyWrapperShouldBeTwitterTime (HackyDateTime s)) = fromString s
+
+
+
+-- | This should be used in place of UTCTime that is being converted from a TwitterTime.
+newtype HackyDateTime = HackyDateTime String
+
+fromHackyDateTime :: HackyDateTime -> String
+fromHackyDateTime (HackyDateTime s) = s
+
+derive instance genericHackyDateTime :: Generic HackyDateTime _
+derive instance newtypeHackyDateTime :: Newtype HackyDateTime _
+instance eqHackyDateTime :: Eq HackyDateTime where eq = genericEq
+instance showHackyDateTime :: Show HackyDateTime where show = genericShow
+
+
+
+
+
 
 --instance FromJSON StreamingAPI where
 --    parseJSON v@(Object o) =
@@ -566,7 +596,7 @@ instance encodeJsonDelete :: EncodeJson Delete where
 ---- See <https://dev.twitter.com/docs/platform-objects/users>.
 newtype User = User
   { userContributorsEnabled :: Boolean
-  , userCreatedAt :: NormalDateTime
+  , userCreatedAt :: HackyDateTime
   , userDefaultProfile :: Boolean
   , userDefaultProfileImage :: Boolean
   , userDescription :: Maybe String
@@ -611,7 +641,7 @@ newtype User = User
 
 toUser
   :: Boolean
-  -> NormalDateTime
+  -> HackyDateTime
   -> Boolean
   -> Boolean
   -> Maybe String
@@ -702,22 +732,54 @@ derive instance newtypeUser :: Newtype User _
 instance eqUser :: Eq User where eq = genericEq
 instance showUser :: Show User where show = genericShow
 
--- instance decodeJsonUser :: DecodeJson User where
---   -- decodeJson :: Json -> Either String User
---   decodeJson =
---     foldJsonObject (Left "not a JObject (User)") \o ->
---       toUser
---         <$> o .? "id"
---         <*> o .? "name"
---         <*> o .? "screen_name"
-
--- instance encodeJsonUser :: EncodeJson User where
---   -- encodeJson :: User -> Json
---   encodeJson (User user) =
---     "id" := user.userUserId ~>
---     "name" := user.userUserName ~>
---     "screen_name" := user.userUserScreenName ~>
---     jsonEmptyObject
+instance decodeJsonUser :: DecodeJson User where
+  -- decodeJson :: Json -> Either String User
+  decodeJson =
+    foldJsonObject (Left "not a JObject (User)") $ checkError' \o ->
+      toUser
+        <$> o .?  "contributors_enabled"
+        <*> (o .?  "created_at" >>= pure <<< fromHackyWrapperShouldBeTwitterTime)
+        <*> o .?  "default_profile"
+        <*> o .?  "default_profile_image"
+        <*> o .?? "description"
+        -- TODO: Why is this written like this??
+        -- <*> fmap join (o .?? "email") -- The field can be a null value
+        <*> o .?? "email"
+        <*> o .?  "favourites_count"
+        <*> o .?? "follow_request_sent" -- .!= Nothing
+        <*> o .?? "following" -- .!= Nothing
+        <*> o .?  "followers_count"
+        <*> o .?  "friends_count"
+        <*> o .?  "geo_enabled"
+        <*> o .?  "id"
+        <*> o .?  "is_translator"
+        <*> o .?  "lang"
+        <*> o .?  "listed_count"
+        <*> o .?? "location"
+        <*> o .?  "name"
+        <*> o .?? "notifications" -- .!= Nothing
+        <*> o .?? "profile_background_color"
+        <*> o .?? "profile_background_image_url"
+        <*> o .?? "profile_background_image_url_https"
+        <*> o .?? "profile_background_tile"
+        <*> o .?? "profile_banner_url"
+        <*> o .?? "profile_image_url"
+        <*> o .?? "profile_image_url_https"
+        <*> o .?  "profile_link_color"
+        <*> o .?  "profile_sidebar_border_color"
+        <*> o .?  "profile_sidebar_fill_color"
+        <*> o .?  "profile_text_color"
+        <*> o .?  "profile_use_background_image"
+        <*> o .?  "protected"
+        <*> o .?  "screen_name"
+        <*> o .?? "show_all_inline_media"
+        <*> o .?  "statuses_count"
+        <*> o .?? "time_zone"
+        <*> o .?? "url" -- .!= Nothing
+        <*> o .?? "utc_offset"
+        <*> o .?  "verified"
+        <*> o .?? "withheld_in_countries"
+        <*> o .?? "withheld_scope"
 
 
 --instance FromJSON User where
