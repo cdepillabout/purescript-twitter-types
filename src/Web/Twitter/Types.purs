@@ -48,7 +48,6 @@ import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Eq (genericEq)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Int (fromNumber)
-import Data.List (List)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, un)
 import Data.StrMap (StrMap)
@@ -68,15 +67,8 @@ import Data.StrMap (StrMap)
 --import System.Locale
 --#endif
 
-newtype TwitterTime = TwitterTime DateTime
---newtype TwitterTime = TwitterTime { fromTwitterTime :: UTCTime }
-
-fromTwitterTime :: TwitterTime -> DateTime
-fromTwitterTime (TwitterTime dateTime) = dateTime
-
-
 type UserId       = Int
-type Friends      = List UserId
+type Friends      = Array UserId
 type URIString    = String
 type UserName     = String
 type StatusId     = Int
@@ -107,9 +99,41 @@ checkError'
 checkError' realFunc o =
   checkError o *> realFunc o
 
+-- | This is a time format displayed in a specific way.  See the function
+-- `twitterTimeFormat` for an example of this.
+newtype TwitterTime = TwitterTime DateTime
+--newtype TwitterTime = TwitterTime { fromTwitterTime :: UTCTime }
+
+fromTwitterTime :: TwitterTime -> DateTime
+fromTwitterTime (TwitterTime dateTime) = dateTime
+
+-- | Example:
+-- | Sat Jun 14 10:15:19 +0000 2014
 twitterTimeFormat :: String
 twitterTimeFormat = "%a %b %d %T %z %Y"
--- Sat Jun 14 10:15:19 +0000 2014
+
+derive instance genericTwitterTime :: Generic TwitterTime _
+derive instance newtypeTwitterTime :: Newtype TwitterTime _
+instance eqTwitterTime :: Eq TwitterTime where eq = genericEq
+instance showTwitterTime :: Show TwitterTime where show = genericShow
+
+-- | This is a "normal" `DateTime` with a FromJSON and ToJSON instance just
+-- | like Haskell's UTCTime.
+-- |
+-- | TODO: For now, we are going to leave this as a String so we don't have to
+-- | figure out how to parse it.  But it should be parsed just like the
+-- | `FromJSON` and `ToJSON` instances for Haskell's UTCTime.
+newtype NormalDateTime = NormalDateTime String
+-- newtype NormalDateTime = NormalDateTime DateTime
+
+derive instance genericNormalDateTime :: Generic NormalDateTime _
+derive instance newtypeNormalDateTime :: Newtype NormalDateTime _
+instance eqNormalDateTime :: Eq NormalDateTime where eq = genericEq
+instance showNormalDateTime :: Show NormalDateTime where show = genericShow
+
+fromNormalDateTime :: NormalDateTime -> String
+fromNormalDateTime (NormalDateTime s) = s
+
 
 --instance FromJSON TwitterTime where
 --    parseJSON = withText "TwitterTime" $ \t ->
@@ -540,49 +564,161 @@ instance encodeJsonDelete :: EncodeJson Delete where
 
 ---- | This type represents the Twitter user.
 ---- See <https://dev.twitter.com/docs/platform-objects/users>.
---data User = User
---    { userContributorsEnabled :: Boolean
---    , userCreatedAt :: UTCTime
---    , userDefaultProfile :: Boolean
---    , userDefaultProfileImage :: Boolean
---    , userDescription :: Maybe Text
---    , userEmail :: Maybe Text
---    , userFavoritesCount :: Int
---    , userFollowRequestSent :: Maybe Boolean
---    , userFollowing :: Maybe Boolean
---    , userFollowersCount :: Int
---    , userFriendsCount :: Int
---    , userGeoEnabled :: Boolean
---    , userId :: UserId
---    , userIsTranslator :: Boolean
---    , userLang :: LanguageCode
---    , userListedCount :: Int
---    , userLocation :: Maybe Text
---    , userName :: Text
---    , userNotifications :: Maybe Boolean
---    , userProfileBackgroundColor :: Maybe Text
---    , userProfileBackgroundImageURL :: Maybe URIString
---    , userProfileBackgroundImageURLHttps :: Maybe URIString
---    , userProfileBackgroundTile :: Maybe Boolean
---    , userProfileBannerURL :: Maybe URIString
---    , userProfileImageURL :: Maybe URIString
---    , userProfileImageURLHttps :: Maybe URIString
---    , userProfileLinkColor :: Text
---    , userProfileSidebarBorderColor :: Text
---    , userProfileSidebarFillColor :: Text
---    , userProfileTextColor :: Text
---    , userProfileUseBackgroundImage :: Boolean
---    , userProtected :: Boolean
---    , userScreenName :: Text
---    , userShowAllInlineMedia :: Maybe Boolean
---    , userStatusesCount :: Int
---    , userTimeZone :: Maybe Text
---    , userURL :: Maybe URIString
---    , userUtcOffset :: Maybe Int
---    , userVerified :: Boolean
---    , userWithheldInCountries :: Maybe [Text]
---    , userWithheldScope :: Maybe Text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype User = User
+  { userContributorsEnabled :: Boolean
+  , userCreatedAt :: NormalDateTime
+  , userDefaultProfile :: Boolean
+  , userDefaultProfileImage :: Boolean
+  , userDescription :: Maybe String
+  , userEmail :: Maybe String
+  , userFavoritesCount :: Int
+  , userFollowRequestSent :: Maybe Boolean
+  , userFollowing :: Maybe Boolean
+  , userFollowersCount :: Int
+  , userFriendsCount :: Int
+  , userGeoEnabled :: Boolean
+  , userId :: UserId
+  , userIsTranslator :: Boolean
+  , userLang :: LanguageCode
+  , userListedCount :: Int
+  , userLocation :: Maybe String
+  , userName :: String
+  , userNotifications :: Maybe Boolean
+  , userProfileBackgroundColor :: Maybe String
+  , userProfileBackgroundImageURL :: Maybe URIString
+  , userProfileBackgroundImageURLHttps :: Maybe URIString
+  , userProfileBackgroundTile :: Maybe Boolean
+  , userProfileBannerURL :: Maybe URIString
+  , userProfileImageURL :: Maybe URIString
+  , userProfileImageURLHttps :: Maybe URIString
+  , userProfileLinkColor :: String
+  , userProfileSidebarBorderColor :: String
+  , userProfileSidebarFillColor :: String
+  , userProfileTextColor :: String
+  , userProfileUseBackgroundImage :: Boolean
+  , userProtected :: Boolean
+  , userScreenName :: String
+  , userShowAllInlineMedia :: Maybe Boolean
+  , userStatusesCount :: Int
+  , userTimeZone :: Maybe String
+  , userURL :: Maybe URIString
+  , userUtcOffset :: Maybe Int
+  , userVerified :: Boolean
+  , userWithheldInCountries :: Maybe (Array String)
+  , userWithheldScope :: Maybe String
+  }
+
+
+toUser
+  :: Boolean
+  -> NormalDateTime
+  -> Boolean
+  -> Boolean
+  -> Maybe String
+  -> Maybe String
+  -> Int
+  -> Maybe Boolean
+  -> Maybe Boolean
+  -> Int
+  -> Int
+  -> Boolean
+  -> UserId
+  -> Boolean
+  -> LanguageCode
+  -> Int
+  -> Maybe String
+  -> String
+  -> Maybe Boolean
+  -> Maybe String
+  -> Maybe URIString
+  -> Maybe URIString
+  -> Maybe Boolean
+  -> Maybe URIString
+  -> Maybe URIString
+  -> Maybe URIString
+  -> String
+  -> String
+  -> String
+  -> String
+  -> Boolean
+  -> Boolean
+  -> String
+  -> Maybe Boolean
+  -> Int
+  -> Maybe String
+  -> Maybe URIString
+  -> Maybe Int
+  -> Boolean
+  -> Maybe (Array String)
+  -> Maybe String
+  -> User
+toUser userContributorsEnabled userCreatedAt userDefaultProfile userDefaultProfileImage userDescription userEmail userFavoritesCount userFollowRequestSent userFollowing userFollowersCount userFriendsCount userGeoEnabled userId userIsTranslator userLang userListedCount userLocation userName userNotifications userProfileBackgroundColor userProfileBackgroundImageURL userProfileBackgroundImageURLHttps userProfileBackgroundTile userProfileBannerURL userProfileImageURL userProfileImageURLHttps userProfileLinkColor userProfileSidebarBorderColor userProfileSidebarFillColor userProfileTextColor userProfileUseBackgroundImage userProtected userScreenName userShowAllInlineMedia userStatusesCount userTimeZone userURL userUtcOffset userVerified userWithheldInCountries userWithheldScope =
+  User
+    { userContributorsEnabled
+    , userCreatedAt
+    , userDefaultProfile
+    , userDefaultProfileImage
+    , userDescription
+    , userEmail
+    , userFavoritesCount
+    , userFollowRequestSent
+    , userFollowing
+    , userFollowersCount
+    , userFriendsCount
+    , userGeoEnabled
+    , userId
+    , userIsTranslator
+    , userLang
+    , userListedCount
+    , userLocation
+    , userName
+    , userNotifications
+    , userProfileBackgroundColor
+    , userProfileBackgroundImageURL
+    , userProfileBackgroundImageURLHttps
+    , userProfileBackgroundTile
+    , userProfileBannerURL
+    , userProfileImageURL
+    , userProfileImageURLHttps
+    , userProfileLinkColor
+    , userProfileSidebarBorderColor
+    , userProfileSidebarFillColor
+    , userProfileTextColor
+    , userProfileUseBackgroundImage
+    , userProtected
+    , userScreenName
+    , userShowAllInlineMedia
+    , userStatusesCount
+    , userTimeZone
+    , userURL
+    , userUtcOffset
+    , userVerified
+    , userWithheldInCountries
+    , userWithheldScope
+    }
+
+derive instance genericUser :: Generic User _
+derive instance newtypeUser :: Newtype User _
+instance eqUser :: Eq User where eq = genericEq
+instance showUser :: Show User where show = genericShow
+
+-- instance decodeJsonUser :: DecodeJson User where
+--   -- decodeJson :: Json -> Either String User
+--   decodeJson =
+--     foldJsonObject (Left "not a JObject (User)") \o ->
+--       toUser
+--         <$> o .? "id"
+--         <*> o .? "name"
+--         <*> o .? "screen_name"
+
+-- instance encodeJsonUser :: EncodeJson User where
+--   -- encodeJson :: User -> Json
+--   encodeJson (User user) =
+--     "id" := user.userUserId ~>
+--     "name" := user.userUserName ~>
+--     "screen_name" := user.userUserScreenName ~>
+--     jsonEmptyObject
+
 
 --instance FromJSON User where
 --    parseJSON (Object o) = checkError o >>
