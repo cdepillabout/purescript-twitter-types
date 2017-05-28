@@ -538,26 +538,6 @@ instance encodeJsonDelete :: EncodeJson Delete where
         deleteObj = "status" := statusObj ~> jsonEmptyObject
     in "delete" := deleteObj ~> jsonEmptyObject
 
---data Delete =
---    Delete
---    { delId  :: StatusId
---    , delUserId :: UserId
---    } deriving (Show, Eq, Data, Typeable, Generic)
-
---instance FromJSON Delete where
---    parseJSON (Object o) = checkError o >> do
---        s <- o .: "delete" >>= (.: "status")
---        Delete <$> s .: "id"
---               <*> s .: "user_id"
---    parseJSON v = fail $ "couldn't parse delete from: " ++ show v
-
---instance ToJSON Delete where
---    toJSON Delete{..} = object [ "delete" .= object [ "status" .= object [ "id"      .= delId
---                                                                         , "user_id" .= delUserId
---                                                                         ]
---                                                    ]
---                               ]
-
 ---- | This type represents the Twitter user.
 ---- See <https://dev.twitter.com/docs/platform-objects/users>.
 --data User = User
