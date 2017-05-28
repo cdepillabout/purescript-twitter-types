@@ -504,6 +504,40 @@ instance showEventType :: Show EventType where show = genericShow
 --                              , "source"        .= evSource
 --                              ]
 
+newtype Delete = Delete
+  { delId  :: StatusId
+  , delUserId :: UserId
+  }
+
+toDelete :: StatusId -> UserId -> Delete
+toDelete delId delUserId =
+  Delete {delId, delUserId}
+
+derive instance genericDelete :: Generic Delete _
+derive instance newtypeDelete :: Newtype Delete _
+instance eqDelete :: Eq Delete where eq = genericEq
+instance showDelete :: Show Delete where show = genericShow
+
+instance decodeJsonDelete :: DecodeJson Delete where
+  -- decodeJson :: Json -> Either String Delete
+  decodeJson =
+    foldJsonObject (Left "not a JObject (Delete)") \o -> do
+      deleteObj <- o .? "delete"
+      statusObj <- deleteObj .? "status"
+      toDelete
+        <$> statusObj .? "id"
+        <*> statusObj .? "user_id"
+
+instance encodeJsonDelete :: EncodeJson Delete where
+  -- encodeJson :: Delete -> Json
+  encodeJson (Delete delete) =
+    let statusObj =
+          "id" := delete.delId ~>
+          "user_id" := delete.delUserId ~>
+          jsonEmptyObject
+        deleteObj = "status" := statusObj ~> jsonEmptyObject
+    in "delete" := deleteObj ~> jsonEmptyObject
+
 --data Delete =
 --    Delete
 --    { delId  :: StatusId
