@@ -40,8 +40,8 @@ import Prelude
 
 import Data.Argonaut
   (class DecodeJson, class EncodeJson, JNumber, JObject, Json, (.?),
-   (:=), (~>), decodeJson, foldJson, foldJsonObject, foldJsonString,
-   fromObject, fromString, jsonEmptyObject)
+   (:=), (~>), decodeJson, encodeJson, foldJson, foldJsonObject,
+   foldJsonString, fromObject, fromString, jsonEmptyObject, toObject)
 import Data.Argonaut.Decode.Combinators ((.??))
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
@@ -51,7 +51,7 @@ import Data.Generic.Rep.Show (genericShow)
 import Data.Int (fromNumber)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, un)
-import Data.StrMap (StrMap)
+import Data.StrMap (StrMap, insert)
 
 --import Control.Applicative
 --import Control.Monad
@@ -1263,17 +1263,17 @@ instance decodeJsonEntity :: DecodeJson a => DecodeJson (Entity a) where
     foldJsonObject (Left "not a JObject (Entity)") \o ->
       toEntity
         <$> decodeJson (fromObject o)
-        <*> o .? "indicies"
+        <*> o .? "indices"
 
--- TODO: This needs to be figured out.
--- instance encodeJsonEntity :: EncodeJson Entity where
---   encodeJson :: Entity -> Json
---   encodeJson (Entity entity) = undefined
-
---instance ToJSON a => ToJSON (Entity a) where
---    toJSON Entity{..} = case toJSON entityBody of
---                            (Object o) -> Object $ union o $ fromList [("indices"::Text, toJSON entityIndices)]
---                            _          -> error "Entity body must produce an object."
+instance encodeJsonEntity :: EncodeJson a => EncodeJson (Entity a) where
+  encodeJson :: Entity a -> Json
+  encodeJson (Entity entity) =
+    let json = encodeJson entity.entityBody
+        maybeJObject = toObject json
+    in case maybeJObject of
+        Nothing -> json
+        Just obj ->
+          fromObject $ insert "indices" (encodeJson entity.entityIndices) obj
 
 newtype Contributor = Contributor
     { contributorId :: UserId
