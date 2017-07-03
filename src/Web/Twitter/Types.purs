@@ -75,16 +75,6 @@ type UserName     = String
 type StatusId     = Int
 type LanguageCode = String
 
---data StreamingAPI = SStatus Status
---                  | SRetweetedStatus RetweetedStatus
---                  | SEvent Event
---                  | SDelete Delete
---                  -- | SScrubGeo ScrubGeo
---                  | SFriends Friends
---                  | SDirectMessage DirectMessage
---                  | SUnknown Value
---                  deriving (Show, Eq, Data, Typeable, Generic)
-
 
 checkError :: JObject -> Either String Unit
 checkError o = do
@@ -174,9 +164,15 @@ instance eqHackyDateTime :: Eq HackyDateTime where eq = genericEq
 instance showHackyDateTime :: Show HackyDateTime where show = genericShow
 
 
-
-
-
+--data StreamingAPI = SStatus Status
+--                  | SRetweetedStatus RetweetedStatus
+--                  | SEvent Event
+--                  | SDelete Delete
+--                  -- | SScrubGeo ScrubGeo
+--                  | SFriends Friends
+--                  | SDirectMessage DirectMessage
+--                  | SUnknown Value
+--                  deriving (Show, Eq, Data, Typeable, Generic)
 
 --instance FromJSON StreamingAPI where
 --    parseJSON v@(Object o) =
@@ -781,51 +777,51 @@ instance decodeJsonUser :: DecodeJson User where
         <*> o .?? "withheld_in_countries"
         <*> o .?? "withheld_scope"
 
-
---instance FromJSON User where
---    parseJSON (Object o) = checkError o >>
---        User <$> o .:  "contributors_enabled"
---             <*> (o .:  "created_at" >>= return . fromTwitterTime)
---             <*> o .:  "default_profile"
---             <*> o .:  "default_profile_image"
---             <*> o .:? "description"
---             <*> fmap join (o .:? "email") -- The field can be a null value
---             <*> o .:  "favourites_count"
---             <*> o .:? "follow_request_sent" .!= Nothing
---             <*> o .:? "following" .!= Nothing
---             <*> o .:  "followers_count"
---             <*> o .:  "friends_count"
---             <*> o .:  "geo_enabled"
---             <*> o .:  "id"
---             <*> o .:  "is_translator"
---             <*> o .:  "lang"
---             <*> o .:  "listed_count"
---             <*> o .:? "location"
---             <*> o .:  "name"
---             <*> o .:? "notifications" .!= Nothing
---             <*> o .:? "profile_background_color"
---             <*> o .:? "profile_background_image_url"
---             <*> o .:? "profile_background_image_url_https"
---             <*> o .:? "profile_background_tile"
---             <*> o .:? "profile_banner_url"
---             <*> o .:? "profile_image_url"
---             <*> o .:? "profile_image_url_https"
---             <*> o .:  "profile_link_color"
---             <*> o .:  "profile_sidebar_border_color"
---             <*> o .:  "profile_sidebar_fill_color"
---             <*> o .:  "profile_text_color"
---             <*> o .:  "profile_use_background_image"
---             <*> o .:  "protected"
---             <*> o .:  "screen_name"
---             <*> o .:? "show_all_inline_media"
---             <*> o .:  "statuses_count"
---             <*> o .:? "time_zone"
---             <*> o .:? "url" .!= Nothing
---             <*> o .:? "utc_offset"
---             <*> o .:  "verified"
---             <*> o .:? "withheld_in_countries"
---             <*> o .:? "withheld_scope"
---    parseJSON v = fail $ "couldn't parse user from: " ++ show v
+instance encodeJsonUser :: EncodeJson User where
+  -- encodeJson :: User -> Json
+  encodeJson (User user) =
+    "contributors_enabled" := user.userContributorsEnabled ~>
+    "created_at" := HackyWrapperShouldBeTwitterTime user.userCreatedAt ~>
+    "default_profile" := user.userDefaultProfile ~>
+    "default_profile_image" := user.userDefaultProfileImage ~>
+    "description" := user.userDescription ~>
+    "email" := user.userEmail ~>
+    "favourites_count" := user.userFavoritesCount ~>
+    "follow_request_sent" := user.userFollowRequestSent ~>
+    "following" := user.userFollowing ~>
+    "followers_count" := user.userFollowersCount ~>
+    "friends_count" := user.userFriendsCount ~>
+    "geo_enabled" := user.userGeoEnabled ~>
+    "id" := user.userId ~>
+    "is_translator" := user.userIsTranslator ~>
+    "lang" := user.userLang ~>
+    "listed_count" := user.userListedCount ~>
+    "location" := user.userLocation ~>
+    "name" := user.userName ~>
+    "notifications" := user.userNotifications ~>
+    "profile_background_color" := user.userProfileBackgroundColor ~>
+    "profile_background_image_url" := user.userProfileBackgroundImageURL ~>
+    "profile_background_image_url_https" := user.userProfileBackgroundImageURLHttps ~>
+    "profile_background_tile" := user.userProfileBackgroundTile ~>
+    "profile_banner_url" := user.userProfileBannerURL ~>
+    "profile_image_url" := user.userProfileImageURL ~>
+    "profile_image_url_https" := user.userProfileImageURLHttps ~>
+    "profile_link_color" := user.userProfileLinkColor ~>
+    "profile_sidebar_border_color" := user.userProfileSidebarBorderColor ~>
+    "profile_sidebar_fill_color" := user.userProfileSidebarFillColor ~>
+    "profile_text_color" := user.userProfileTextColor ~>
+    "profile_use_background_image" := user.userProfileUseBackgroundImage ~>
+    "protected" := user.userProtected ~>
+    "screen_name" := user.userScreenName ~>
+    "show_all_inline_media" := user.userShowAllInlineMedia ~>
+    "statuses_count" := user.userStatusesCount ~>
+    "time_zone" := user.userTimeZone ~>
+    "url" := user.userURL ~>
+    "utc_offset" := user.userUtcOffset ~>
+    "verified" := user.userVerified ~>
+    "withheld_in_countries" := user.userWithheldInCountries ~>
+    "withheld_scope" := user.userWithheldScope ~>
+    jsonEmptyObject
 
 --instance ToJSON User where
 --    toJSON User{..} = object [ "contributors_enabled"               .= userContributorsEnabled
