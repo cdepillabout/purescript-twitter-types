@@ -40,8 +40,8 @@ import Prelude
 
 import Data.Argonaut
   (class DecodeJson, class EncodeJson, JNumber, JObject, Json, (.?),
-   (:=), (~>), decodeJson, foldJson, foldJsonObject, foldJsonString, fromString,
-   jsonEmptyObject)
+   (:=), (~>), decodeJson, foldJson, foldJsonObject, foldJsonString,
+   fromObject, fromString, jsonEmptyObject)
 import Data.Argonaut.Decode.Combinators ((.??))
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
@@ -1234,23 +1234,41 @@ instance encodeJsonBoundingBox :: EncodeJson BoundingBox where
 --                                 , "media"          .= enMedia
 --                                 ]
 
----- | The character positions the Entity was extracted from
-----
-----   This is experimental implementation.
-----   This may be replaced by more definite types.
---type EntityIndices = [Int]
+-- | The character positions the Entity was extracted from
+-- |
+-- | This is experimental implementation.
+-- | This may be replaced by more definite types.
+type EntityIndices = Array Int
 
---data Entity a =
---    Entity
---    { entityBody    :: a             -- ^ The detail information of the specific entity types (HashTag, URL, User)
---    , entityIndices :: EntityIndices -- ^ The character positions the Entity was extracted from
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype Entity a =
+    Entity
+    { entityBody    :: a
+    -- ^ The detail information of specific entity types (HashTag, URL, User)
+    , entityIndices :: EntityIndices
+    -- ^ The character positions the Entity was extracted from
+    }
 
---instance FromJSON a => FromJSON (Entity a) where
---    parseJSON v@(Object o) =
---        Entity <$> parseJSON v
---               <*> o .: "indices"
---    parseJSON v = fail $ "couldn't parse entity wrapper from: " ++ show v
+toEntity :: forall a. a -> EntityIndices -> Entity a
+toEntity entityBody entityIndices =
+  Entity {entityBody, entityIndices}
+
+derive instance genericEntity :: Generic (Entity a) _
+derive instance newtypeEntity :: Newtype (Entity a) _
+instance eqEntity :: Eq a => Eq (Entity a) where eq = genericEq
+instance showEntity :: Show a => Show (Entity a) where show = genericShow
+
+instance decodeJsonEntity :: DecodeJson a => DecodeJson (Entity a) where
+  decodeJson :: Json -> Either String (Entity a)
+  decodeJson =
+    foldJsonObject (Left "not a JObject (Entity)") \o ->
+      toEntity
+        <$> decodeJson (fromObject o)
+        <*> o .? "indicies"
+
+-- TODO: This needs to be figured out.
+-- instance encodeJsonEntity :: EncodeJson Entity where
+--   encodeJson :: Entity -> Json
+--   encodeJson (Entity entity) = undefined
 
 --instance ToJSON a => ToJSON (Entity a) where
 --    toJSON Entity{..} = case toJSON entityBody of
