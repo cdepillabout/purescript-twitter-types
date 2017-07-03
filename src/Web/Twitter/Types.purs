@@ -39,7 +39,7 @@ module Web.Twitter.Types
 import Prelude
 
 import Data.Argonaut
-  (class DecodeJson, class EncodeJson, JNumber, JObject, (.?),
+  (class DecodeJson, class EncodeJson, JNumber, JObject, Json, (.?),
    (:=), (~>), decodeJson, foldJson, foldJsonObject, foldJsonString, fromString,
    jsonEmptyObject)
 import Data.Argonaut.Decode.Combinators ((.??))
@@ -141,13 +141,13 @@ instance showHackyWrapperShouldBeTwitterTime :: Show HackyWrapperShouldBeTwitter
 
 
 instance decodeJsonHackyWrapperShouldBeTwitterTime :: DecodeJson HackyWrapperShouldBeTwitterTime where
-  -- decodeJson :: Json -> Either String HackyWrapperShouldBeTwitterTime
+  decodeJson :: Json -> Either String HackyWrapperShouldBeTwitterTime
   decodeJson =
     foldJsonString (Left "not a JString (HackyWrapperShouldBeTwitterTime)") \s ->
       Right $ HackyWrapperShouldBeTwitterTime $ HackyDateTime s
 
 instance encodeJsonHackyWrapperShouldBeTwitterTime :: EncodeJson HackyWrapperShouldBeTwitterTime where
-  -- encodeJson :: HackyWrapperShouldBeTwitterTime -> Json
+  encodeJson :: HackyWrapperShouldBeTwitterTime -> Json
   encodeJson (HackyWrapperShouldBeTwitterTime (HackyDateTime s)) = fromString s
 
 
@@ -388,7 +388,7 @@ instance eqSearchMetadata :: Eq SearchMetadata where eq = genericEq
 instance showSearchMetadata :: Show SearchMetadata where show = genericShow
 
 instance decodeJsonSearchMetadata :: DecodeJson SearchMetadata where
-  -- decodeJson :: Json -> Either String SearchMetadata
+  decodeJson :: Json -> Either String SearchMetadata
   decodeJson =
     foldJsonObject (Left "not a JObject (SearchMetadata)") $ checkError' \o ->
       toSearchMetadata
@@ -403,7 +403,7 @@ instance decodeJsonSearchMetadata :: DecodeJson SearchMetadata where
         <*> o .? "max_id_str"
 
 instance encodeJsonSearchMetadata :: EncodeJson SearchMetadata where
-  -- encodeJson :: SearchMetadata -> Json
+  encodeJson :: SearchMetadata -> Json
   encodeJson (SearchMetadata searchMetadata) =
     "max_id" := searchMetadata.searchMetadataMaxId ~>
     "since_id" := searchMetadata.searchMetadataSinceId ~>
@@ -569,7 +569,7 @@ instance eqDelete :: Eq Delete where eq = genericEq
 instance showDelete :: Show Delete where show = genericShow
 
 instance decodeJsonDelete :: DecodeJson Delete where
-  -- decodeJson :: Json -> Either String Delete
+  decodeJson :: Json -> Either String Delete
   decodeJson =
     foldJsonObject (Left "not a JObject (Delete)") \o -> do
       deleteObj <- o .? "delete"
@@ -579,7 +579,7 @@ instance decodeJsonDelete :: DecodeJson Delete where
         <*> statusObj .? "user_id"
 
 instance encodeJsonDelete :: EncodeJson Delete where
-  -- encodeJson :: Delete -> Json
+  encodeJson :: Delete -> Json
   encodeJson (Delete delete) =
     let statusObj =
           "id" := delete.delId ~>
@@ -729,7 +729,7 @@ instance eqUser :: Eq User where eq = genericEq
 instance showUser :: Show User where show = genericShow
 
 instance decodeJsonUser :: DecodeJson User where
-  -- decodeJson :: Json -> Either String User
+  decodeJson :: Json -> Either String User
   decodeJson =
     foldJsonObject (Left "not a JObject (User)") $ checkError' \o ->
       toUser
@@ -778,7 +778,7 @@ instance decodeJsonUser :: DecodeJson User where
         <*> o .?? "withheld_scope"
 
 instance encodeJsonUser :: EncodeJson User where
-  -- encodeJson :: User -> Json
+  encodeJson :: User -> Json
   encodeJson (User user) =
     "contributors_enabled" := user.userContributorsEnabled ~>
     "created_at" := HackyWrapperShouldBeTwitterTime user.userCreatedAt ~>
@@ -915,13 +915,13 @@ instance eqHashTagEntity :: Eq HashTagEntity where eq = genericEq
 instance showHashTagEntity :: Show HashTagEntity where show = genericShow
 
 instance decodeJsonHashTagEntity :: DecodeJson HashTagEntity where
-  -- decodeJson :: Json -> Either String HashTagEntity
+  decodeJson :: Json -> Either String HashTagEntity
   decodeJson =
     foldJsonObject (Left "not a JObject (HashTagEntity)") \o ->
       toHashTagEntity <$> o .? "text"
 
 instance encodeJsonHashTagEntity :: EncodeJson HashTagEntity where
-  -- encodeJson :: HashTagEntity -> Json
+  encodeJson :: HashTagEntity -> Json
   encodeJson (HashTagEntity hashTagEntity) =
     "text" := hashTagEntity.hashTagText ~>
     jsonEmptyObject
@@ -944,7 +944,7 @@ instance eqUserEntity :: Eq UserEntity where eq = genericEq
 instance showUserEntity :: Show UserEntity where show = genericShow
 
 instance decodeJsonUserEntity :: DecodeJson UserEntity where
-  -- decodeJson :: Json -> Either String UserEntity
+  decodeJson :: Json -> Either String UserEntity
   decodeJson =
     foldJsonObject (Left "not a JObject (UserEntity)") \o ->
       toUserEntity
@@ -953,7 +953,7 @@ instance decodeJsonUserEntity :: DecodeJson UserEntity where
         <*> o .? "screen_name"
 
 instance encodeJsonUserEntity :: EncodeJson UserEntity where
-  -- encodeJson :: UserEntity -> Json
+  encodeJson :: UserEntity -> Json
   encodeJson (UserEntity userEntity) =
     "id" := userEntity.userEntityUserId ~>
     "name" := userEntity.userEntityUserName ~>
@@ -981,7 +981,7 @@ instance eqURLEntity :: Eq URLEntity where eq = genericEq
 instance showURLEntity :: Show URLEntity where show = genericShow
 
 instance decodeJsonURLEntity :: DecodeJson URLEntity where
-  -- decodeJson :: Json -> Either String URLEntity
+  decodeJson :: Json -> Either String URLEntity
   decodeJson =
     foldJsonObject (Left "not a JObject (URLEntity)") \o ->
       toURLEntity
@@ -990,7 +990,7 @@ instance decodeJsonURLEntity :: DecodeJson URLEntity where
         <*> o .? "display_url"
 
 instance encodeJsonURLEntity :: EncodeJson URLEntity where
-  -- encodeJson :: URLEntity -> Json
+  encodeJson :: URLEntity -> Json
   encodeJson (URLEntity urlEntity) =
     "url" := urlEntity.ueURL ~>
     "expanded_url" := urlEntity.ueExpanded ~>
@@ -1024,7 +1024,7 @@ instance eqMediaEntity :: Eq MediaEntity where eq = genericEq
 instance showMediaEntity :: Show MediaEntity where show = genericShow
 
 instance decodeJsonMediaEntity :: DecodeJson MediaEntity where
-  -- decodeJson :: Json -> Either String MediaEntity
+  decodeJson :: Json -> Either String MediaEntity
   decodeJson json =
     foldJsonObject (Left "not a JObject (MediaEntity)") f json
     where
@@ -1039,7 +1039,7 @@ instance decodeJsonMediaEntity :: DecodeJson MediaEntity where
           <*> decodeJson json
 
 instance encodeJsonMediaEntity :: EncodeJson MediaEntity where
-  -- encodeJson :: MediaEntity -> Json
+  encodeJson :: MediaEntity -> Json
   encodeJson (MediaEntity mediaEntity) =
     "type" := mediaEntity.meType ~>
     "id" := mediaEntity.meId ~>
@@ -1069,7 +1069,7 @@ instance eqMediaSize :: Eq MediaSize where eq = genericEq
 instance showMediaSize :: Show MediaSize where show = genericShow
 
 instance decodeJsonMediaSize :: DecodeJson MediaSize where
-  -- decodeJson :: Json -> Either String MediaSize
+  decodeJson :: Json -> Either String MediaSize
   decodeJson =
     foldJsonObject (Left "not a JObject (MediaSize)") \o ->
       toMediaSize
@@ -1078,7 +1078,7 @@ instance decodeJsonMediaSize :: DecodeJson MediaSize where
         <*> o .? "resize"
 
 instance encodeJsonMediaSize :: EncodeJson MediaSize where
-  -- encodeJson :: MediaSize -> Json
+  encodeJson :: MediaSize -> Json
   encodeJson (MediaSize mediaSize) =
     "w" := mediaSize.msWidth ~>
     "h" := mediaSize.msHeight ~>
@@ -1103,7 +1103,7 @@ instance eqCoordinates :: Eq Coordinates where eq = genericEq
 instance showCoordinates :: Show Coordinates where show = genericShow
 
 instance decodeJsonCoordinates :: DecodeJson Coordinates where
-  -- decodeJson :: Json -> Either String Coordinates
+  decodeJson :: Json -> Either String Coordinates
   decodeJson =
     foldJsonObject (Left "not a JObject (Coordinates)") \o ->
       toCoordinates
@@ -1111,7 +1111,7 @@ instance decodeJsonCoordinates :: DecodeJson Coordinates where
         <*> o .? "type"
 
 instance encodeJsonCoordinates :: EncodeJson Coordinates where
-  -- encodeJson :: Coordinates -> Json
+  encodeJson :: Coordinates -> Json
   encodeJson (Coordinates coordinates) =
     "coordinates" := coordinates.coordinates ~>
     "type" := coordinates.coordinatesType ~>
@@ -1161,7 +1161,7 @@ instance eqPlace :: Eq Place where eq = genericEq
 instance showPlace :: Show Place where show = genericShow
 
 instance decodeJsonPlace :: DecodeJson Place where
-  -- decodeJson :: Json -> Either String Place
+  decodeJson :: Json -> Either String Place
   decodeJson =
     foldJsonObject (Left "not a JObject (Place)") \o ->
       toPlace
@@ -1176,7 +1176,7 @@ instance decodeJsonPlace :: DecodeJson Place where
         <*> o .? "url"
 
 instance encodeJsonPlace :: EncodeJson Place where
-  -- encodeJson :: Place -> Json
+  encodeJson :: Place -> Json
   encodeJson (Place place) =
     "attributes" := place.placeAttributes ~>
     "bounding_box" := place.placeBoundingBox ~>
@@ -1209,7 +1209,7 @@ instance eqBoundingBox :: Eq BoundingBox where eq = genericEq
 instance showBoundingBox :: Show BoundingBox where show = genericShow
 
 instance decodeJsonBoundingBox :: DecodeJson BoundingBox where
-  -- decodeJson :: Json -> Either String BoundingBox
+  decodeJson :: Json -> Either String BoundingBox
   decodeJson =
     foldJsonObject (Left "not a JObject (BoundingBox)") \o ->
       toBoundingBox
@@ -1217,7 +1217,7 @@ instance decodeJsonBoundingBox :: DecodeJson BoundingBox where
         <*> o .? "type"
 
 instance encodeJsonBoundingBox :: EncodeJson BoundingBox where
-  -- encodeJson :: BoundingBox -> Json
+  encodeJson :: BoundingBox -> Json
   encodeJson (BoundingBox boundingBox) =
     "coordinates" := boundingBox.boundingBoxCoordinates ~>
     "type" := boundingBox.boundingBoxType ~>
@@ -1289,7 +1289,7 @@ instance eqContributor :: Eq Contributor where eq = genericEq
 instance showContributor :: Show Contributor where show = genericShow
 
 instance decodeJsonContributor :: DecodeJson Contributor where
-  -- decodeJson :: Json -> Either String Contributor
+  decodeJson :: Json -> Either String Contributor
   decodeJson =
     foldJson
       (const err)
@@ -1315,7 +1315,7 @@ instance decodeJsonContributor :: DecodeJson Contributor where
           Just n -> Right $ toContributor n Nothing
 
 instance encodeJsonContributor :: EncodeJson Contributor where
-  -- encodeJson :: Contributor -> Json
+  encodeJson :: Contributor -> Json
   encodeJson (Contributor contributor) =
     "id" := contributor.contributorId ~>
     "screen_name" := contributor.contributorScreenName ~>
@@ -1343,7 +1343,7 @@ instance eqImageSizeType :: Eq ImageSizeType where eq = genericEq
 instance showImageSizeType :: Show ImageSizeType where show = genericShow
 
 instance decodeJsonImageSizeType :: DecodeJson ImageSizeType where
-  -- decodeJson :: Json -> Either String ImageSizeType
+  decodeJson :: Json -> Either String ImageSizeType
   decodeJson =
     foldJsonObject (Left "not a JObject (ImageSizeType)") \o ->
       toImageSizeType
@@ -1352,7 +1352,7 @@ instance decodeJsonImageSizeType :: DecodeJson ImageSizeType where
         <*> o .? "image_type"
 
 instance encodeJsonImageSizeType :: EncodeJson ImageSizeType where
-  -- encodeJson :: ImageSizeType -> Json
+  encodeJson :: ImageSizeType -> Json
   encodeJson (ImageSizeType imageSizeType) =
     "w" := imageSizeType.imageSizeTypeWidth ~>
     "h" := imageSizeType.imageSizeTypeHeight ~>
@@ -1381,7 +1381,7 @@ instance eqUploadedMedia :: Eq UploadedMedia where eq = genericEq
 instance showUploadedMedia :: Show UploadedMedia where show = genericShow
 
 instance decodeJsonUploadedMedia :: DecodeJson UploadedMedia where
-  -- decodeJson :: Json -> Either String UploadedMedia
+  decodeJson :: Json -> Either String UploadedMedia
   decodeJson =
     foldJsonObject (Left "not a JObject (UploadedMedia)") \o ->
       toUploadedMedia
@@ -1390,7 +1390,7 @@ instance decodeJsonUploadedMedia :: DecodeJson UploadedMedia where
         <*> o .? "image"
 
 instance encodeJsonUploadedMedia :: EncodeJson UploadedMedia where
-  -- encodeJson :: UploadedMedia -> Json
+  encodeJson :: UploadedMedia -> Json
   encodeJson (UploadedMedia uploadedMedia) =
     "media_id" := uploadedMedia.uploadedMediaId ~>
     "size" := uploadedMedia.uploadedMediaSize ~>
