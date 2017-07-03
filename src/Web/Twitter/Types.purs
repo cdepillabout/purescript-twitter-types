@@ -16,7 +16,7 @@ module Web.Twitter.Types
        -- , Event(..)
        -- , Delete(..)
        -- , User(..)
-       -- , List(..)
+       -- , List'(..)
        -- , Entities(..)
        -- , EntityIndices
        -- , Entity(..)
@@ -511,7 +511,7 @@ instance eqEventType :: Eq EventType where eq = genericEq
 instance showEventType :: Show EventType where show = genericShow
 
 
---data EventTarget = ETUser User | ETStatus Status | ETList List | ETUnknown Value
+--data EventTarget = ETUser User | ETStatus Status | ETList List' | ETUnknown Value
 --                 deriving (Show, Eq, Data, Typeable, Generic)
 
 --instance FromJSON EventTarget where
@@ -823,37 +823,67 @@ instance encodeJsonUser :: EncodeJson User where
     "withheld_scope" := user.userWithheldScope ~>
     jsonEmptyObject
 
---data List =
---    List
---    { listId :: Int
---    , listName :: Text
---    , listFullName :: Text
---    , listMemberCount :: Int
---    , listSubscriberCount :: Int
---    , listMode :: Text
---    , listUser :: User
---    } deriving (Show, Eq, Data, Typeable, Generic)
 
---instance FromJSON List where
---    parseJSON (Object o) = checkError o >>
---        List <$> o .:  "id"
---             <*> o .:  "name"
---             <*> o .:  "full_name"
---             <*> o .:  "member_count"
---             <*> o .:  "subscriber_count"
---             <*> o .:  "mode"
---             <*> o .:  "user"
---    parseJSON v = fail $ "couldn't parse List from: " ++ show v
 
---instance ToJSON List where
---    toJSON List{..} = object [ "id"                 .= listId
---                             , "name"               .= listName
---                             , "full_name"          .= listFullName
---                             , "member_count"       .= listMemberCount
---                             , "subscriber_count"   .= listSubscriberCount
---                             , "mode"               .= listMode
---                             , "user"               .= listUser
---                             ]
+newtype List' = List'
+  { listId :: Int
+  , listName :: String
+  , listFullName :: String
+  , listMemberCount :: Int
+  , listSubscriberCount :: Int
+  , listMode :: String
+  , listUser :: User
+  }
+
+toList'
+  :: Int
+  -> String
+  -> String
+  -> Int
+  -> Int
+  -> String
+  -> User
+  -> List'
+toList' listId listName listFullName listMemberCount listSubscriberCount listMode listUser =
+  List'
+    { listId
+    , listName
+    , listFullName
+    , listMemberCount
+    , listSubscriberCount
+    , listMode
+    , listUser
+    }
+
+derive instance genericList' :: Generic List' _
+derive instance newtypeList' :: Newtype List' _
+instance eqList' :: Eq List' where eq = genericEq
+instance showList' :: Show List' where show = genericShow
+
+instance decodeJsonList' :: DecodeJson List' where
+  decodeJson :: Json -> Either String List'
+  decodeJson =
+    foldJsonObject (Left "not a JObject (List')") $ checkError' \o ->
+      toList'
+        <$> o .?  "id"
+        <*> o .?  "name"
+        <*> o .?  "full_name"
+        <*> o .?  "member_count"
+        <*> o .?  "subscriber_count"
+        <*> o .?  "mode"
+        <*> o .?  "user"
+
+instance encodeJsonList' :: EncodeJson List' where
+  encodeJson :: List' -> Json
+  encodeJson (List' list) =
+    "id" := list.listId ~>
+    "name" := list.listName ~>
+    "full_name" := list.listFullName ~>
+    "member_count" := list.listMemberCount ~>
+    "subscriber_count" := list.listSubscriberCount ~>
+    "mode" := list.listMode ~>
+    "user" := list.listUser ~>
+    jsonEmptyObject
 
 -- | Hashtag entity.
 -- See <https://dev.twitter.com/docs/platform-objects/entities#obj-hashtags>.
