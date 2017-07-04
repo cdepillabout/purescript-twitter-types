@@ -42,7 +42,7 @@ import Data.Argonaut
   (class DecodeJson, class EncodeJson, JNumber, JObject, Json, (.?),
    (:=), (~>), decodeJson, encodeJson, foldJson, foldJsonObject,
    foldJsonString, fromObject, fromString, jsonEmptyObject, toObject)
-import Data.Argonaut.Decode.Combinators ((.??))
+import Data.Argonaut.Decode.Combinators ((.??), (.?=))
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
 import Data.Generic.Rep (class Generic)
@@ -1209,8 +1209,40 @@ instance encodeJsonBoundingBox :: EncodeJson BoundingBox where
     "type" := boundingBox.boundingBoxType ~>
     jsonEmptyObject
 
----- | Entity handling.
----- See <https://dev.twitter.com/docs/platform-objects/entities>.
+-- | Entity handling.
+-- | See <https://dev.twitter.com/docs/platform-objects/entities>.
+newtype Entities = Entities
+  { enHashTags :: Array (Entity HashTagEntity)
+  , enUserMentions :: Array (Entity UserEntity)
+  , enURLs :: Array (Entity URLEntity)
+  , enMedia :: Array (Entity MediaEntity)
+  }
+
+toEntities
+  :: Array (Entity HashTagEntity)
+  -> Array (Entity UserEntity)
+  -> Array (Entity URLEntity)
+  -> Array (Entity MediaEntity)
+  -> Entities
+toEntities enHashTags enUserMentions enURLs enMedia =
+  Entities {enHashTags, enUserMentions, enURLs, enMedia}
+
+derive instance genericEntities :: Generic Entities _
+derive instance newtypeEntities :: Newtype Entities _
+instance eqEntities :: Eq Entities where eq = genericEq
+instance showEntities :: Show Entities where show = genericShow
+
+instance decodeJsonEntities :: DecodeJson Entities where
+  decodeJson :: Json -> Either String Entities
+  decodeJson =
+    foldJsonObject (Left "not a JObject (Entities)") \o ->
+      toEntities
+       <$> o .?? "hashtags" .?= []
+       <*> o .?? "user_mentions" .?= []
+       <*> o .?? "urls" .?= []
+       <*> o .?? "media" .?= []
+
+
 --data Entities =
 --    Entities
 --    { enHashTags     :: [Entity HashTagEntity]
