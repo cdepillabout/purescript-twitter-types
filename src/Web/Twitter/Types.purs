@@ -317,34 +317,62 @@ instance showHackyDateTime :: Show HackyDateTime where show = genericShow
 --                                     , "search_metadata" .= searchResultSearchMetadata
 --                                     ]
 
---data SearchStatus =
---    SearchStatus
---    { searchStatusCreatedAt     :: UTCTime
---    , searchStatusId            :: StatusId
---    , searchStatusText          :: Text
---    , searchStatusSource        :: Text
---    , searchStatusUser          :: User
---    , searchStatusCoordinates   :: Maybe Coordinates
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype SearchStatus = SearchStatus
+    { searchStatusCreatedAt :: HackyDateTime
+    , searchStatusId :: StatusId
+    , searchStatusText :: String
+    , searchStatusSource :: String
+    , searchStatusUser :: User
+    , searchStatusCoordinates :: Maybe Coordinates
+    }
 
---instance FromJSON SearchStatus where
---    parseJSON (Object o) = checkError o >>
---        SearchStatus <$> (o .:  "created_at" >>= return . fromTwitterTime)
---                     <*> o .:  "id"
---                     <*> o .:  "text"
---                     <*> o .:  "source"
---                     <*> o .:  "user"
---                     <*> o .:? "coordinates"
---    parseJSON v = fail $ "couldn't parse status search result from: " ++ show v
+toSearchStatus
+  :: HackyDateTime
+  -> StatusId
+  -> String
+  -> String
+  -> User
+  -> Maybe Coordinates
+  -> SearchStatus
+toSearchStatus
+    searchStatusCreatedAt searchStatusId searchStatusText searchStatusSource
+    searchStatusUser searchStatusCoordinates =
+  SearchStatus
+    { searchStatusCreatedAt
+    , searchStatusId
+    , searchStatusText
+    , searchStatusSource
+    , searchStatusUser
+    , searchStatusCoordinates
+    }
 
---instance ToJSON SearchStatus where
---    toJSON SearchStatus{..} = object [ "created_at"     .= TwitterTime searchStatusCreatedAt
---                                     , "id"             .= searchStatusId
---                                     , "text"           .= searchStatusText
---                                     , "source"         .= searchStatusSource
---                                     , "user"           .= searchStatusUser
---                                     , "coordinates"    .= searchStatusCoordinates
---                                     ]
+derive instance genericSearchStatus :: Generic SearchStatus _
+derive instance newtypeSearchStatus :: Newtype SearchStatus _
+instance eqSearchStatus :: Eq SearchStatus where eq = genericEq
+instance showSearchStatus :: Show SearchStatus where show = genericShow
+
+instance decodeJsonSearchStatus :: DecodeJson SearchStatus where
+  decodeJson :: Json -> Either String SearchStatus
+  decodeJson =
+    foldJsonObject (Left "not a JObject (SearchStatus)") $ checkError' \o ->
+      toSearchStatus
+        <$> map fromHackyWrapperShouldBeTwitterTime (o .?  "created_at")
+        <*> o .?  "id"
+        <*> o .?  "text"
+        <*> o .?  "source"
+        <*> o .?  "user"
+        <*> o .?? "coordinates"
+
+instance encodeJsonSearchStatus :: EncodeJson SearchStatus where
+  encodeJson :: SearchStatus -> Json
+  encodeJson (SearchStatus searchStatus) =
+    "created_at" := HackyWrapperShouldBeTwitterTime searchStatus.searchStatusCreatedAt ~>
+    "id" := searchStatus.searchStatusId ~>
+    "text" := searchStatus.searchStatusText ~>
+    "source" := searchStatus.searchStatusSource ~>
+    "user" := searchStatus.searchStatusUser ~>
+    "coordinates" := searchStatus.searchStatusCoordinates ~>
+    jsonEmptyObject
 
 newtype SearchMetadata = SearchMetadata
   { searchMetadataMaxId :: StatusId
