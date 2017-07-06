@@ -454,46 +454,82 @@ instance encodeJsonSearchMetadata :: EncodeJson SearchMetadata where
 --                                        , "coordinates"         .= rsCoordinates
 --                                        ]
 
---data DirectMessage =
---    DirectMessage
---    { dmCreatedAt          :: UTCTime
---    , dmSenderScreenName   :: Text
---    , dmSender             :: User
---    , dmText               :: Text
---    , dmRecipientScreeName :: Text
---    , dmId                 :: StatusId
---    , dmRecipient          :: User
---    , dmRecipientId        :: UserId
---    , dmSenderId           :: UserId
---    , dmCoordinates        :: Maybe Coordinates
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype DirectMessage = DirectMessage
+  { dmCreatedAt          :: HackyDateTime
+  , dmSenderScreenName   :: String
+  , dmSender             :: User
+  , dmText               :: String
+  , dmRecipientScreeName :: String
+  , dmId                 :: StatusId
+  , dmRecipient          :: User
+  , dmRecipientId        :: UserId
+  , dmSenderId           :: UserId
+  , dmCoordinates        :: Maybe Coordinates
+  }
 
---instance FromJSON DirectMessage where
---    parseJSON (Object o) = checkError o >>
---        DirectMessage <$> (o .:  "created_at" >>= return . fromTwitterTime)
---                      <*> o .:  "sender_screen_name"
---                      <*> o .:  "sender"
---                      <*> o .:  "text"
---                      <*> o .:  "recipient_screen_name"
---                      <*> o .:  "id"
---                      <*> o .:  "recipient"
---                      <*> o .:  "recipient_id"
---                      <*> o .:  "sender_id"
---                      <*> o .:? "coordinates"
---    parseJSON v = fail $ "couldn't parse direct message from: " ++ show v
+toDirectMessage
+  :: HackyDateTime
+  -> String
+  -> User
+  -> String
+  -> String
+  -> StatusId
+  -> User
+  -> UserId
+  -> UserId
+  -> Maybe Coordinates
+  -> DirectMessage
+toDirectMessage
+    dmCreatedAt dmSenderScreenName dmSender dmText dmRecipientScreeName dmId
+    dmRecipient dmRecipientId dmSenderId dmCoordinates =
+  DirectMessage
+    { dmCreatedAt
+    , dmSenderScreenName
+    , dmSender
+    , dmText
+    , dmRecipientScreeName
+    , dmId
+    , dmRecipient
+    , dmRecipientId
+    , dmSenderId
+    , dmCoordinates
+    }
 
---instance ToJSON DirectMessage where
---    toJSON DirectMessage{..} = object [ "created_at"            .= TwitterTime dmCreatedAt
---                                      , "sender_screen_name"    .= dmSenderScreenName
---                                      , "sender"                .= dmSender
---                                      , "text"                  .= dmText
---                                      , "recipient_screen_name" .= dmRecipientScreeName
---                                      , "id"                    .= dmId
---                                      , "recipient"             .= dmRecipient
---                                      , "recipient_id"          .= dmRecipientId
---                                      , "sender_id"             .= dmSenderId
---                                      , "coordinates"           .= dmCoordinates
---                                      ]
+derive instance genericDirectMessage :: Generic DirectMessage _
+derive instance newtypeDirectMessage :: Newtype DirectMessage _
+instance eqDirectMessage :: Eq DirectMessage where eq = genericEq
+instance showDirectMessage :: Show DirectMessage where show = genericShow
+
+instance decodeJsonDirectMessage :: DecodeJson DirectMessage where
+  decodeJson :: Json -> Either String DirectMessage
+  decodeJson =
+    foldJsonObject (Left "not a JObject (DirectMessage)") \o ->
+      toDirectMessage
+        <$> map fromHackyWrapperShouldBeTwitterTime (o .?  "created_at")
+        <*> o .?  "sender_screen_name"
+        <*> o .?  "sender"
+        <*> o .?  "text"
+        <*> o .?  "recipient_screen_name"
+        <*> o .?  "id"
+        <*> o .?  "recipient"
+        <*> o .?  "recipient_id"
+        <*> o .?  "sender_id"
+        <*> o .?? "coordinates"
+
+instance encodeJsonDirectMessage :: EncodeJson DirectMessage where
+  encodeJson :: DirectMessage -> Json
+  encodeJson (DirectMessage directMessage) =
+    "created_at" := HackyWrapperShouldBeTwitterTime directMessage.dmCreatedAt ~>
+    "sender_screen_name" := directMessage.dmSenderScreenName ~>
+    "sender" := directMessage.dmSender ~>
+    "text" := directMessage.dmText ~>
+    "recipient_screen_name" := directMessage.dmRecipientScreeName ~>
+    "id" := directMessage.dmId ~>
+    "recipient" := directMessage.dmRecipient ~>
+    "recipient_id" := directMessage.dmRecipientId ~>
+    "sender_id" := directMessage.dmSenderId ~>
+    "coordinates" := directMessage.dmCoordinates ~>
+    jsonEmptyObject
 
 data EventType
   = Favorite
@@ -734,7 +770,7 @@ instance decodeJsonUser :: DecodeJson User where
     foldJsonObject (Left "not a JObject (User)") $ checkError' \o ->
       toUser
         <$> o .?  "contributors_enabled"
-        <*> (o .?  "created_at" >>= pure <<< fromHackyWrapperShouldBeTwitterTime)
+        <*> map fromHackyWrapperShouldBeTwitterTime (o .?  "created_at")
         <*> o .?  "default_profile"
         <*> o .?  "default_profile_image"
         <*> o .?? "description"
@@ -1178,15 +1214,15 @@ instance encodeJsonPlace :: EncodeJson Place where
 -- | A bounding box of coordinates which encloses the place.
 -- See <https://dev.twitter.com/docs/platform-objects/places#obj-boundingbox>.
 newtype BoundingBox = BoundingBox
-    { boundingBoxCoordinates :: Array (Array (Array Number))
-    , boundingBoxType :: String
-    }
+  { boundingBoxCoordinates :: Array (Array (Array Number))
+  , boundingBoxType :: String
+  }
 
 toBoundingBox :: Array (Array (Array Number)) -> String -> BoundingBox
-toBoundingBox coord t =
+toBoundingBox boundingBoxCoordinates boundingBoxType =
   BoundingBox
-    { boundingBoxCoordinates: coord
-    , boundingBoxType: t
+    { boundingBoxCoordinates
+    , boundingBoxType
     }
 
 derive instance genericBoundingBox :: Generic BoundingBox _
@@ -1242,29 +1278,14 @@ instance decodeJsonEntities :: DecodeJson Entities where
        <*> o .?? "urls" .?= []
        <*> o .?? "media" .?= []
 
-
---data Entities =
---    Entities
---    { enHashTags     :: [Entity HashTagEntity]
---    , enUserMentions :: [Entity UserEntity]
---    , enURLs         :: [Entity URLEntity]
---    , enMedia        :: [Entity MediaEntity]
---    } deriving (Show, Eq, Data, Typeable, Generic)
-
---instance FromJSON Entities where
---    parseJSON (Object o) =
---        Entities <$> o .:? "hashtags" .!= []
---                 <*> o .:? "user_mentions" .!= []
---                 <*> o .:? "urls" .!= []
---                 <*> o .:? "media" .!= []
---    parseJSON v = fail $ "couldn't parse entities from: " ++ show v
-
---instance ToJSON Entities where
---    toJSON Entities{..} = object [ "hashtags"       .= enHashTags
---                                 , "user_mentions"  .= enUserMentions
---                                 , "urls"           .= enURLs
---                                 , "media"          .= enMedia
---                                 ]
+instance encodeJsonEntities :: EncodeJson Entities where
+  encodeJson :: Entities -> Json
+  encodeJson (Entities entities) =
+    "hashtags" := entities.enHashTags ~>
+    "user_mentions" := entities.enUserMentions ~>
+    "urls" := entities.enURLs ~>
+    "media" := entities.enMedia ~>
+    jsonEmptyObject
 
 -- | The character positions the Entity was extracted from
 -- |
