@@ -298,33 +298,46 @@ instance showHackyDateTime :: Show HackyDateTime where show = genericShow
 --                               , "withheld_scope"           .= statusWithheldScope
 --                               ]
 
---data SearchResult body =
---    SearchResult
---    { searchResultStatuses :: body
---    , searchResultSearchMetadata :: SearchMetadata
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype SearchResult body = SearchResult
+  { searchResultStatuses :: body
+  , searchResultSearchMetadata :: SearchMetadata
+  }
 
---instance FromJSON body =>
---         FromJSON (SearchResult body) where
---    parseJSON (Object o) = checkError o >>
---        SearchResult <$> o .:  "statuses"
---                     <*> o .:  "search_metadata"
---    parseJSON v = fail $ "couldn't parse search result from: " ++ show v
+toSearchResult :: forall body. body -> SearchMetadata -> SearchResult body
+toSearchResult searchResultStatuses searchResultSearchMetadata =
+  SearchResult {searchResultStatuses, searchResultSearchMetadata}
 
---instance ToJSON body =>
---         ToJSON (SearchResult body) where
---    toJSON SearchResult{..} = object [ "statuses"        .= searchResultStatuses
---                                     , "search_metadata" .= searchResultSearchMetadata
---                                     ]
+derive instance genericSearchResult :: Generic (SearchResult body) _
+derive instance newtypeSearchResult :: Newtype (SearchResult body) _
+instance eqSearchResult :: Eq body => Eq (SearchResult body) where eq = genericEq
+instance showSearchResult :: Show body => Show (SearchResult body) where
+  show = genericShow
+
+instance decodeJsonSearchResult
+    :: DecodeJson body => DecodeJson (SearchResult body) where
+  decodeJson :: Json -> Either String (SearchResult body)
+  decodeJson =
+    foldJsonObject (Left "not a JObject (SearchResult)") $ checkError' \o ->
+      toSearchResult
+        <$> o .? "statuses"
+        <*> o .?  "search_metadata"
+
+instance encodeJsonSearchResult
+    :: EncodeJson body => EncodeJson (SearchResult body) where
+  encodeJson :: SearchResult body -> Json
+  encodeJson (SearchResult searchResult) =
+    "statuses" := searchResult.searchResultStatuses ~>
+    "search_metadata" := searchResult.searchResultSearchMetadata ~>
+    jsonEmptyObject
 
 newtype SearchStatus = SearchStatus
-    { searchStatusCreatedAt :: HackyDateTime
-    , searchStatusId :: StatusId
-    , searchStatusText :: String
-    , searchStatusSource :: String
-    , searchStatusUser :: User
-    , searchStatusCoordinates :: Maybe Coordinates
-    }
+  { searchStatusCreatedAt :: HackyDateTime
+  , searchStatusId :: StatusId
+  , searchStatusText :: String
+  , searchStatusSource :: String
+  , searchStatusUser :: User
+  , searchStatusCoordinates :: Maybe Coordinates
+  }
 
 toSearchStatus
   :: HackyDateTime
