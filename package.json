@@ -8,6 +8,7 @@
     "docs": "pulp docs",
     "postinstall": "bower cache clean && bower install",
     "publish": "pulp publish",
+    "repl": "pulp repl",
     "test": "pulp test",
     "watch": "pulp --watch build",
     "watch:test": "pulp --watch test"

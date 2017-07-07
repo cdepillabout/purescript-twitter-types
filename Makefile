@@ -1,4 +1,4 @@
-.PHONY: build clean docs install publish test watch watch-test
+.PHONY: build clean docs install publish repl test watch watch-test
 all: build
 
 build:
@@ -15,6 +15,9 @@ install:
 
 publish:
 	npm run publish
+
+repl:
+	npm run repl
 
 test:
 	npm run test
