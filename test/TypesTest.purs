@@ -2,6 +2,7 @@ module Test.Main where
 
 import Prelude
 
+import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
@@ -23,20 +24,106 @@ main
        , process :: PROCESS
        , random :: RANDOM
        , timer :: TIMER
-       | e)
+       | e
+       )
        Unit
-main = run [consoleReporter] $
-    tests
+main = run [consoleReporter] do
+    unitTests
+    propTests
 
-tests
+unitTests
   :: forall eff.
      Spec
        ( console :: CONSOLE
        , exception :: EXCEPTION
        , random :: RANDOM
-       | eff )
+       | eff
+       )
        Unit
-tests = describe "test" do
+unitTests = describe "Unit tests" do
+  it "case_parseStatus" case_parseStatus
+  it "case_parseStatusQuoted" case_parseStatusQuoted
+  it "case_parseStatusWithPhoto" case_parseStatusWithPhoto
+  it "case_parseStatusIncludeEntities" case_parseStatusIncludeEntities
+  it "case_parseSearchStatusMetadata" case_parseSearchStatusMetadata
+  it "case_parseSearchStatusBodyStatus" case_parseSearchStatusBodyStatus
+  it "case_parseSearchStatusBodySearchStatus" case_parseSearchStatusBodySearchStatus
+  it "case_parseDirectMessage" case_parseDirectMessage
+  it "case_parseEventFavorite" case_parseEventFavorite
+  it "case_parseEventUnfavorite" case_parseEventUnfavorite
+  it "case_parseDelete" case_parseDelete
+  it "case_parseErrorMsg" case_parseErrorMsg
+  it "case_parseMediaEntity" case_parseMediaEntity
+  it "case_parseEmptyEntity" case_parseEmptyEntity
+  it "case_parseEntityHashTag" case_parseEntityHashTag
+  it "case_parseExtendedEntities" case_parseExtendedEntities
+  it "case_parseUser" case_parseUser
+  it "case_parseList" case_parseList
+
+case_parseStatus :: forall eff. Aff eff Unit
+case_parseStatus = pure unit
+
+case_parseStatusQuoted :: forall eff. Aff eff Unit
+case_parseStatusQuoted = pure unit
+
+case_parseStatusWithPhoto :: forall eff. Aff eff Unit
+case_parseStatusWithPhoto = pure unit
+
+case_parseStatusIncludeEntities :: forall eff. Aff eff Unit
+case_parseStatusIncludeEntities = pure unit
+
+case_parseSearchStatusMetadata :: forall eff. Aff eff Unit
+case_parseSearchStatusMetadata = pure unit
+
+case_parseSearchStatusBodyStatus :: forall eff. Aff eff Unit
+case_parseSearchStatusBodyStatus = pure unit
+
+case_parseSearchStatusBodySearchStatus :: forall eff. Aff eff Unit
+case_parseSearchStatusBodySearchStatus = pure unit
+
+case_parseDirectMessage :: forall eff. Aff eff Unit
+case_parseDirectMessage = pure unit
+
+case_parseEventFavorite :: forall eff. Aff eff Unit
+case_parseEventFavorite = pure unit
+
+case_parseEventUnfavorite :: forall eff. Aff eff Unit
+case_parseEventUnfavorite = pure unit
+
+case_parseDelete :: forall eff. Aff eff Unit
+case_parseDelete = pure unit
+
+case_parseErrorMsg :: forall eff. Aff eff Unit
+case_parseErrorMsg = pure unit
+
+case_parseMediaEntity :: forall eff. Aff eff Unit
+case_parseMediaEntity = pure unit
+
+case_parseEmptyEntity :: forall eff. Aff eff Unit
+case_parseEmptyEntity = pure unit
+
+case_parseEntityHashTag :: forall eff. Aff eff Unit
+case_parseEntityHashTag = pure unit
+
+case_parseExtendedEntities :: forall eff. Aff eff Unit
+case_parseExtendedEntities = pure unit
+
+case_parseUser :: forall eff. Aff eff Unit
+case_parseUser = pure unit
+
+case_parseList :: forall eff. Aff eff Unit
+case_parseList = pure unit
+
+propTests
+  :: forall eff.
+     Spec
+       ( console :: CONSOLE
+       , exception :: EXCEPTION
+       , random :: RANDOM
+       | eff
+       )
+       Unit
+propTests = describe "Property tests" do
   it "test test" $
     1 `shouldEqual` 1
 
