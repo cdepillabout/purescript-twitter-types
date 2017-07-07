@@ -9,11 +9,16 @@ import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Random (RANDOM)
 import Control.Monad.Eff.Timer (TIMER)
+import Data.Argonaut (class DecodeJson, decodeJson, jsonParser)
+import Data.Either (Either(..))
+import Data.Foldable (length)
 import Node.Process (PROCESS)
 import Test.Spec (Spec, describe, it)
-import Test.Spec.Assertions (shouldEqual)
+import Test.Spec.Assertions (fail, shouldEqual)
 import Test.Spec.Reporter.Console (consoleReporter)
 import Test.Spec.Runner (run)
+
+import Web.Twitter.Types (SearchResult(SearchResult), SearchStatus)
 
 main
   :: forall e.
@@ -60,6 +65,19 @@ unitTests = describe "Unit tests" do
   it "case_parseUser" case_parseUser
   it "case_parseList" case_parseList
 
+withJson
+  :: forall eff a.
+     DecodeJson a
+  => String
+  -> (a -> Aff eff Unit)
+  -> Aff eff Unit
+withJson filename action = do
+  -- TODO: This.  This shouldnt' be filename, but the actual contents of the file.
+  let eitherA = jsonParser filename >>= decodeJson
+  case eitherA of
+    Left err -> fail $ "Could not decode as JSON: " <> err
+    Right a -> action a
+
 case_parseStatus :: forall eff. Aff eff Unit
 case_parseStatus = pure unit
 
@@ -79,7 +97,16 @@ case_parseSearchStatusBodyStatus :: forall eff. Aff eff Unit
 case_parseSearchStatusBodyStatus = pure unit
 
 case_parseSearchStatusBodySearchStatus :: forall eff. Aff eff Unit
-case_parseSearchStatusBodySearchStatus = pure unit
+case_parseSearchStatusBodySearchStatus =
+  withJson "search_haskell.json" \(SearchResult searchResult) -> do
+    let status = searchResult.searchResultStatuses :: Array SearchStatus
+    length status `shouldEqual` 1
+
+-- case_parseSearchStatusBodySearchStatus :: Assertion
+-- case_parseSearchStatusBodySearchStatus = withJSON fixture_search_haskell $ \obj -> do
+--     let status = (searchResultStatuses obj) :: [SearchStatus]
+--     length status @?= 1
+--     searchStatusText (head status) @?= "haskell"
 
 case_parseDirectMessage :: forall eff. Aff eff Unit
 case_parseDirectMessage = pure unit
