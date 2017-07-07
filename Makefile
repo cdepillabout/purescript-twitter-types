@@ -26,4 +26,4 @@ watch:
 	npm run watch
 
 watch-test:
-	npm run watch-test
+	npm run watch:test
