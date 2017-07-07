@@ -384,40 +384,6 @@ instance encodeJsonStatus :: EncodeJson Status where
     "withheld_scope" := status.statusWithheldScope ~>
     jsonEmptyObject
 
---instance ToJSON Status where
---    toJSON Status{..} = object [ "contributors"             .= statusContributors
---                               , "coordinates"              .= statusCoordinates
---                               , "created_at"               .= TwitterTime statusCreatedAt
---                               , "current_user_retweet"     .= object [ "id"     .= statusCurrentUserRetweet
---                                                                      , "id_str" .= show statusCurrentUserRetweet
---                                                                      ]
---                               , "entities"                 .= statusEntities
---                               , "extended_entities"        .= statusExtendedEntities
---                               , "favorite_count"           .= statusFavoriteCount
---                               , "favorited"                .= statusFavorited
---                               , "filter_level"             .= statusFilterLevel
---                               , "id"                       .= statusId
---                               , "in_reply_to_screen_name"  .= statusInReplyToScreenName
---                               , "in_reply_to_status_id"    .= statusInReplyToStatusId
---                               , "in_reply_to_user_id"      .= statusInReplyToUserId
---                               , "lang"                     .= statusLang
---                               , "place"                    .= statusPlace
---                               , "possibly_sensitive"       .= statusPossiblySensitive
---                               , "scopes"                   .= statusScopes
---                               , "quoted_status_id"         .= statusQuotedStatusId
---                               , "quoted_status"            .= statusQuotedStatus
---                               , "retweet_count"            .= statusRetweetCount
---                               , "retweeted"                .= statusRetweeted
---                               , "retweeted_status"         .= statusRetweetedStatus
---                               , "source"                   .= statusSource
---                               , "text"                     .= statusText
---                               , "truncated"                .= statusTruncated
---                               , "user"                     .= statusUser
---                               , "withheld_copyright"       .= statusWithheldCopyright
---                               , "withheld_in_countries"    .= statusWithheldInCountries
---                               , "withheld_scope"           .= statusWithheldScope
---                               ]
-
 newtype SearchResult body = SearchResult
   { searchResultStatuses :: body
   , searchResultSearchMetadata :: SearchMetadata
