@@ -710,22 +710,35 @@ instance eqEventType :: Eq EventType where eq = genericEq
 instance showEventType :: Show EventType where show = genericShow
 
 
---data EventTarget = ETUser User | ETStatus Status | ETList List' | ETUnknown Value
---                 deriving (Show, Eq, Data, Typeable, Generic)
+data EventTarget
+  = ETUser User
+  | ETStatus Status
+  | ETList List'
+  | ETUnknown Json
 
---instance FromJSON EventTarget where
---    parseJSON v@(Object o) = checkError o >>
---        ETUser <$> parseJSON v <|>
---        ETStatus <$> parseJSON v <|>
---        ETList <$> parseJSON v <|>
---        return (ETUnknown v)
---    parseJSON v = fail $ "couldn't parse event target from: " ++ show v
+derive instance genericEventTarget :: Generic EventTarget _
+-- TODO: Take off these constraints when there is an Eq and Show instance for
+-- Status.
+instance eqEventTarget :: Eq Status => Eq EventTarget where eq = genericEq
+instance showEventTarget :: Show Status => Show EventTarget where show = genericShow
 
---instance ToJSON EventTarget where
---    toJSON (ETUser    u) = toJSON u
---    toJSON (ETStatus  s) = toJSON s
---    toJSON (ETList    l) = toJSON l
---    toJSON (ETUnknown v) = v
+instance decodeJsonEventTarget :: DecodeJson EventTarget where
+  decodeJson :: Json -> Either String EventTarget
+  decodeJson =
+    foldJsonObject (Left "not a JObject (EventTarget)") $ checkError' \o ->
+      let value = fromObject o
+      in
+        ETUser <$> decodeJson value <|>
+        ETStatus <$> decodeJson value <|>
+        ETList <$> decodeJson value <|>
+        pure (ETUnknown value)
+
+instance encodeJsonEventTarget :: EncodeJson EventTarget where
+  encodeJson :: EventTarget -> Json
+  encodeJson (ETUser user) = encodeJson user
+  encodeJson (ETStatus status) = encodeJson status
+  encodeJson (ETList list) = encodeJson list
+  encodeJson (ETUnknown unknown) = unknown
 
 --data Event =
 --    Event
