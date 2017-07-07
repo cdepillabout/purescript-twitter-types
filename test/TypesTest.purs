@@ -13,6 +13,8 @@ import Control.Monad.Eff.Timer (TIMER)
 import Data.Argonaut (class DecodeJson, decodeJson, jsonParser)
 import Data.Either (Either(..))
 import Data.Foldable (length)
+import Node.Buffer (BUFFER, toString)
+import Node.Encoding (Encoding(UTF8))
 import Node.FS (FS)
 import Node.FS.Sync (readFile)
 import Node.Process (PROCESS)
@@ -27,6 +29,7 @@ main
   :: forall e.
      Eff
        ( avar :: AVAR
+       , buffer :: BUFFER
        , console :: CONSOLE
        , exception :: EXCEPTION
        , fs :: FS
@@ -43,7 +46,8 @@ main = run [consoleReporter] do
 unitTests
   :: forall eff.
      Spec
-       ( console :: CONSOLE
+       ( buffer :: BUFFER
+       , console :: CONSOLE
        , exception :: EXCEPTION
        , fs :: FS
        , random :: RANDOM
@@ -74,11 +78,12 @@ withJson
   :: forall eff a.
      DecodeJson a
   => String
-  -> (a -> Aff (fs :: FS, exception :: EXCEPTION | eff) Unit)
-  -> Aff (fs :: FS, exception :: EXCEPTION | eff) Unit
+  -> (a -> Aff (buffer :: BUFFER, fs :: FS, exception :: EXCEPTION | eff) Unit)
+  -> Aff (buffer :: BUFFER, fs :: FS, exception :: EXCEPTION | eff) Unit
 withJson filename action = do
   fileBuffer <- liftEff $ readFile $ "test/fixtures/" <> filename
-  let eitherA = jsonParser filename >>= decodeJson
+  fileString <- liftEff $ toString UTF8 fileBuffer
+  let eitherA = jsonParser fileString >>= decodeJson
   case eitherA of
     Left err -> fail $ "Could not decode as JSON: " <> err
     Right a -> action a
@@ -102,7 +107,7 @@ case_parseSearchStatusBodyStatus :: forall eff. Aff eff Unit
 case_parseSearchStatusBodyStatus = pure unit
 
 case_parseSearchStatusBodySearchStatus
-  :: forall eff. Aff (fs :: FS, exception :: EXCEPTION | eff) Unit
+  :: forall eff. Aff (buffer :: BUFFER, fs :: FS, exception :: EXCEPTION | eff) Unit
 case_parseSearchStatusBodySearchStatus =
   withJson "search_haskell.json" \(SearchResult searchResult) -> do
     let status = searchResult.searchResultStatuses :: Array SearchStatus
