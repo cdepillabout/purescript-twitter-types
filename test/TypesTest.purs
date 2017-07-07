@@ -5,6 +5,7 @@ import Prelude
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Random (RANDOM)
@@ -12,6 +13,8 @@ import Control.Monad.Eff.Timer (TIMER)
 import Data.Argonaut (class DecodeJson, decodeJson, jsonParser)
 import Data.Either (Either(..))
 import Data.Foldable (length)
+import Node.FS (FS)
+import Node.FS.Sync (readFile)
 import Node.Process (PROCESS)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (fail, shouldEqual)
@@ -26,6 +29,7 @@ main
        ( avar :: AVAR
        , console :: CONSOLE
        , exception :: EXCEPTION
+       , fs :: FS
        , process :: PROCESS
        , random :: RANDOM
        , timer :: TIMER
@@ -41,6 +45,7 @@ unitTests
      Spec
        ( console :: CONSOLE
        , exception :: EXCEPTION
+       , fs :: FS
        , random :: RANDOM
        | eff
        )
@@ -69,10 +74,10 @@ withJson
   :: forall eff a.
      DecodeJson a
   => String
-  -> (a -> Aff eff Unit)
-  -> Aff eff Unit
+  -> (a -> Aff (fs :: FS, exception :: EXCEPTION | eff) Unit)
+  -> Aff (fs :: FS, exception :: EXCEPTION | eff) Unit
 withJson filename action = do
-  -- TODO: This.  This shouldnt' be filename, but the actual contents of the file.
+  fileBuffer <- liftEff $ readFile $ "test/fixtures/" <> filename
   let eitherA = jsonParser filename >>= decodeJson
   case eitherA of
     Left err -> fail $ "Could not decode as JSON: " <> err
@@ -96,7 +101,8 @@ case_parseSearchStatusMetadata = pure unit
 case_parseSearchStatusBodyStatus :: forall eff. Aff eff Unit
 case_parseSearchStatusBodyStatus = pure unit
 
-case_parseSearchStatusBodySearchStatus :: forall eff. Aff eff Unit
+case_parseSearchStatusBodySearchStatus
+  :: forall eff. Aff (fs :: FS, exception :: EXCEPTION | eff) Unit
 case_parseSearchStatusBodySearchStatus =
   withJson "search_haskell.json" \(SearchResult searchResult) -> do
     let status = searchResult.searchResultStatuses :: Array SearchStatus
