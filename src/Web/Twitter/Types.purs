@@ -38,6 +38,7 @@ module Web.Twitter.Types
 
 import Prelude
 
+import Control.Alt ((<|>))
 import Data.Argonaut
   (class DecodeJson, class EncodeJson, JNumber, JObject, Json, (.?),
    (:=), (~>), decodeJson, encodeJson, foldJson, foldJsonObject,
@@ -197,72 +198,191 @@ instance showHackyDateTime :: Show HackyDateTime where show = genericShow
 --    toJSON (SDirectMessage   m) = toJSON m
 --    toJSON (SUnknown         v) = v
 
----- | This type represents a Twitter tweet structure.
----- See <https://dev.twitter.com/docs/platform-objects/tweets>.
---data Status = Status
---    { statusContributors :: Maybe [Contributor]
---    , statusCoordinates :: Maybe Coordinates
---    , statusCreatedAt :: UTCTime
---    , statusCurrentUserRetweet :: Maybe StatusId
---    , statusEntities :: Maybe Entities
---    , statusExtendedEntities :: Maybe Entities
---    , statusFavoriteCount :: Integer
---    , statusFavorited :: Maybe Boolean
---    , statusFilterLevel :: Maybe Text
---    , statusId :: StatusId
---    , statusInReplyToScreenName :: Maybe Text
---    , statusInReplyToStatusId :: Maybe StatusId
---    , statusInReplyToUserId :: Maybe UserId
---    , statusLang :: Maybe LanguageCode
---    , statusPlace :: Maybe Place
---    , statusPossiblySensitive :: Maybe Boolean
---    , statusScopes :: Maybe Object
---    , statusQuotedStatusId :: Maybe StatusId
---    , statusQuotedStatus :: Maybe Status
---    , statusRetweetCount :: Integer
---    , statusRetweeted :: Maybe Boolean
---    , statusRetweetedStatus :: Maybe Status
---    , statusSource :: Text
---    , statusText :: Text
---    , statusTruncated :: Boolean
---    , statusUser :: User
---    , statusWithheldCopyright :: Maybe Boolean
---    , statusWithheldInCountries :: Maybe [Text]
---    , statusWithheldScope :: Maybe Text
---    } deriving (Show, Eq, Data, Typeable, Generic)
+-- | This type represents a Twitter tweet structure.
+-- See <https://dev.twitter.com/docs/platform-objects/tweets>.
+newtype Status = Status
+  { statusContributors :: Maybe (Array Contributor)
+  , statusCoordinates :: Maybe Coordinates
+  , statusCreatedAt :: HackyDateTime
+  , statusCurrentUserRetweet :: Maybe StatusId
+  , statusEntities :: Maybe Entities
+  , statusExtendedEntities :: Maybe Entities
+  , statusFavoriteCount :: Int
+  , statusFavorited :: Maybe Boolean
+  , statusFilterLevel :: Maybe String
+  , statusId :: StatusId
+  , statusInReplyToScreenName :: Maybe String
+  , statusInReplyToStatusId :: Maybe StatusId
+  , statusInReplyToUserId :: Maybe UserId
+  , statusLang :: Maybe LanguageCode
+  , statusPlace :: Maybe Place
+  , statusPossiblySensitive :: Maybe Boolean
+  , statusScopes :: Maybe JObject
+  , statusQuotedStatusId :: Maybe StatusId
+  , statusQuotedStatus :: Maybe Status
+  , statusRetweetCount :: Int
+  , statusRetweeted :: Maybe Boolean
+  , statusRetweetedStatus :: Maybe Status
+  , statusSource :: String
+  , statusText :: String
+  , statusTruncated :: Boolean
+  , statusUser :: User
+  , statusWithheldCopyright :: Maybe Boolean
+  , statusWithheldInCountries :: Maybe (Array String)
+  , statusWithheldScope :: Maybe String
+  }
 
---instance FromJSON Status where
---    parseJSON (Object o) = checkError o >>
---        Status <$> o .:? "contributors" .!= Nothing
---               <*> o .:? "coordinates" .!= Nothing
---               <*> (o .:  "created_at" >>= return . fromTwitterTime)
---               <*> ((o .: "current_user_retweet" >>= (.: "id")) <|> return Nothing)
---               <*> o .:? "entities"
---               <*> o .:? "extended_entities"
---               <*> o .:? "favorite_count" .!= 0
---               <*> o .:? "favorited"
---               <*> o .:? "filter_level"
---               <*> o .:  "id"
---               <*> o .:? "in_reply_to_screen_name" .!= Nothing
---               <*> o .:? "in_reply_to_status_id" .!= Nothing
---               <*> o .:? "in_reply_to_user_id" .!= Nothing
---               <*> o .:? "lang"
---               <*> o .:? "place" .!= Nothing
---               <*> o .:? "possibly_sensitive"
---               <*> o .:? "scopes"
---               <*> o .:? "quoted_status_id"
---               <*> o .:? "quoted_status"
---               <*> o .:? "retweet_count" .!= 0
---               <*> o .:? "retweeted"
---               <*> o .:? "retweeted_status"
---               <*> o .:  "source"
---               <*> o .:  "text"
---               <*> o .:  "truncated"
---               <*> o .:  "user"
---               <*> o .:? "withheld_copyright"
---               <*> o .:? "withheld_in_countries"
---               <*> o .:? "withheld_scope"
---    parseJSON v = fail $ "couldn't parse status from: " ++ show v
+toStatus
+  :: Maybe (Array Contributor)
+  -> Maybe Coordinates
+  -> HackyDateTime
+  -> Maybe StatusId
+  -> Maybe Entities
+  -> Maybe Entities
+  -> Int
+  -> Maybe Boolean
+  -> Maybe String
+  -> StatusId
+  -> Maybe String
+  -> Maybe StatusId
+  -> Maybe UserId
+  -> Maybe LanguageCode
+  -> Maybe Place
+  -> Maybe Boolean
+  -> Maybe JObject
+  -> Maybe StatusId
+  -> Maybe Status
+  -> Int
+  -> Maybe Boolean
+  -> Maybe Status
+  -> String
+  -> String
+  -> Boolean
+  -> User
+  -> Maybe Boolean
+  -> Maybe (Array String)
+  -> Maybe String
+  -> Status
+toStatus
+    statusContributors statusCoordinates statusCreatedAt
+    statusCurrentUserRetweet statusEntities statusExtendedEntities
+    statusFavoriteCount statusFavorited statusFilterLevel statusId
+    statusInReplyToScreenName statusInReplyToStatusId statusInReplyToUserId
+    statusLang statusPlace statusPossiblySensitive statusScopes
+    statusQuotedStatusId statusQuotedStatus statusRetweetCount statusRetweeted
+    statusRetweetedStatus statusSource statusText statusTruncated statusUser
+    statusWithheldCopyright statusWithheldInCountries statusWithheldScope =
+  Status
+    { statusContributors
+    , statusCoordinates
+    , statusCreatedAt
+    , statusCurrentUserRetweet
+    , statusEntities
+    , statusExtendedEntities
+    , statusFavoriteCount
+    , statusFavorited
+    , statusFilterLevel
+    , statusId
+    , statusInReplyToScreenName
+    , statusInReplyToStatusId
+    , statusInReplyToUserId
+    , statusLang
+    , statusPlace
+    , statusPossiblySensitive
+    , statusScopes
+    , statusQuotedStatusId
+    , statusQuotedStatus
+    , statusRetweetCount
+    , statusRetweeted
+    , statusRetweetedStatus
+    , statusSource
+    , statusText
+    , statusTruncated
+    , statusUser
+    , statusWithheldCopyright
+    , statusWithheldInCountries
+    , statusWithheldScope
+    }
+
+derive instance genericStatus :: Generic Status _
+derive instance newtypeStatus :: Newtype Status _
+-- TODO: These are not working because Status is used recursively in the
+-- definition of Status.
+-- instance eqStatus :: Eq Status where eq = genericEq
+-- instance showStatus :: Show Status where show = genericShow
+
+instance decodeJsonStatus :: DecodeJson Status where
+  decodeJson :: Json -> Either String Status
+  decodeJson =
+    foldJsonObject (Left "not a JObject (Status)") $ checkError' \o ->
+      toStatus
+        <$> o .?? "contributors"
+        <*> o .?? "coordinates"
+        <*> map fromHackyWrapperShouldBeTwitterTime (o .?  "created_at")
+        <*> (((o .? "current_user_retweet") >>= (\oo -> oo .? "id")) <|> pure Nothing)
+        <*> o .?? "entities"
+        <*> o .?? "extended_entities"
+        <*> o .?? "favorite_count" .?= 0
+        <*> o .?? "favorited"
+        <*> o .?? "filter_level"
+        <*> o .?  "id"
+        <*> o .?? "in_reply_to_screen_name"
+        <*> o .?? "in_reply_to_status_id"
+        <*> o .?? "in_reply_to_user_id"
+        <*> o .?? "lang"
+        <*> o .?? "place"
+        <*> o .?? "possibly_sensitive"
+        <*> o .?? "scopes"
+        <*> o .?? "quoted_status_id"
+        <*> o .?? "quoted_status"
+        <*> o .?? "retweet_count" .?= 0
+        <*> o .?? "retweeted"
+        <*> o .?? "retweeted_status"
+        <*> o .?  "source"
+        <*> o .?  "text"
+        <*> o .?  "truncated"
+        <*> o .?  "user"
+        <*> o .?? "withheld_copyright"
+        <*> o .?? "withheld_in_countries"
+        <*> o .?? "withheld_scope"
+
+instance encodeJsonStatus :: EncodeJson Status where
+  encodeJson :: Status -> Json
+  encodeJson (Status status) =
+    "contributors" := status.statusContributors ~>
+    "coordinates" := status.statusCoordinates ~>
+    "created_at" := HackyWrapperShouldBeTwitterTime status.statusCreatedAt ~>
+    "current_user_retweet" :=
+      ( "id" := status.statusCurrentUserRetweet ~>
+        "id_str" := show status.statusCurrentUserRetweet ~>
+        jsonEmptyObject
+      ) ~>
+    "entities" := status.statusEntities ~>
+    "extended_entities" := status.statusExtendedEntities ~>
+    "favorite_count" := status.statusFavoriteCount ~>
+    "favorited" := status.statusFavorited ~>
+    "filter_level" := status.statusFilterLevel ~>
+    "id" := status.statusId ~>
+    "in_reply_to_screen_name" := status.statusInReplyToScreenName ~>
+    "in_reply_to_status_id" := status.statusInReplyToStatusId ~>
+    "in_reply_to_user_id" := status.statusInReplyToUserId ~>
+    "lang" := status.statusLang ~>
+    "place" := status.statusPlace ~>
+    "possibly_sensitive" := status.statusPossiblySensitive ~>
+    "scopes" := status.statusScopes ~>
+    "quoted_status_id" := status.statusQuotedStatusId ~>
+    "quoted_status" := status.statusQuotedStatus ~>
+    "retweet_count" := status.statusRetweetCount ~>
+    "retweeted" := status.statusRetweeted ~>
+    "retweeted_status" := status.statusRetweetedStatus ~>
+    "source" := status.statusSource ~>
+    "text" := status.statusText ~>
+    "truncated" := status.statusTruncated ~>
+    "user" := status.statusUser ~>
+    "withheld_copyright" := status.statusWithheldCopyright ~>
+    "withheld_in_countries" := status.statusWithheldInCountries ~>
+    "withheld_scope" := status.statusWithheldScope ~>
+    jsonEmptyObject
 
 --instance ToJSON Status where
 --    toJSON Status{..} = object [ "contributors"             .= statusContributors
