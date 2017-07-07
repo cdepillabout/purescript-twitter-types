@@ -740,31 +740,57 @@ instance encodeJsonEventTarget :: EncodeJson EventTarget where
   encodeJson (ETList list) = encodeJson list
   encodeJson (ETUnknown unknown) = unknown
 
---data Event =
---    Event
---    { evCreatedAt       :: UTCTime
---    , evTargetObject    :: Maybe EventTarget
---    , evEvent           :: Text
---    , evTarget          :: EventTarget
---    , evSource          :: EventTarget
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype Event = Event
+  { evCreatedAt       :: HackyDateTime
+  , evTargetObject    :: Maybe EventTarget
+  , evEvent           :: String
+  , evTarget          :: EventTarget
+  , evSource          :: EventTarget
+  }
 
---instance FromJSON Event where
---    parseJSON (Object o) = checkError o >>
---        Event <$> (o .:  "created_at" >>= return . fromTwitterTime)
---              <*> o .:? "target_object"
---              <*> o .:  "event"
---              <*> o .:  "target"
---              <*> o .:  "source"
---    parseJSON v = fail $ "couldn't parse event from: " ++ show v
+toEvent
+  :: HackyDateTime
+  -> Maybe EventTarget
+  -> String
+  -> EventTarget
+  -> EventTarget
+  -> Event
+toEvent evCreatedAt evTargetObject evEvent evTarget evSource =
+  Event
+    { evCreatedAt
+    , evTargetObject
+    , evEvent
+    , evTarget
+    , evSource
+    }
 
---instance ToJSON Event where
---    toJSON Event{..} = object [ "created_at"    .= TwitterTime evCreatedAt
---                              , "target_object" .= evTargetObject
---                              , "event"         .= evEvent
---                              , "target"        .= evTarget
---                              , "source"        .= evSource
---                              ]
+derive instance genericEvent :: Generic Event _
+derive instance newtypeEvent :: Newtype Event _
+-- TODO: Take off these constraints when there is an Eq and Show instance for
+-- Status.
+instance eqEvent :: Eq Status => Eq Event where eq = genericEq
+instance showEvent :: Show Status => Show Event where show = genericShow
+
+instance decodeJsonEvent :: DecodeJson Event where
+  decodeJson :: Json -> Either String Event
+  decodeJson =
+    foldJsonObject (Left "not a JObject (Event)") $ checkError' \o ->
+      toEvent
+        <$> map fromHackyWrapperShouldBeTwitterTime (o .?  "created_at")
+        <*> o .?? "target_object"
+        <*> o .?  "event"
+        <*> o .?  "target"
+        <*> o .?  "source"
+
+instance encodeJsonEvent :: EncodeJson Event where
+  encodeJson :: Event -> Json
+  encodeJson (Event event) =
+    "created_at" := HackyWrapperShouldBeTwitterTime event.evCreatedAt ~>
+    "target_object" := event.evTargetObject ~>
+    "event"         := event.evEvent ~>
+    "target"        := event.evTarget ~>
+    "source"        := event.evSource ~>
+    jsonEmptyObject
 
 newtype Delete = Delete
   { delId  :: StatusId
