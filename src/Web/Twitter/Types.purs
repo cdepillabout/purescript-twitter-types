@@ -169,7 +169,6 @@ data StreamingAPI
   | SRetweetedStatus RetweetedStatus
   | SEvent Event
   | SDelete Delete
-  -- | SScrubGeo ScrubGeo
   | SFriends Friends
   | SDirectMessage DirectMessage
   | SUnknown Json
