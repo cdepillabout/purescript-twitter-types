@@ -164,39 +164,45 @@ derive instance newtypeHackyDateTime :: Newtype HackyDateTime _
 instance eqHackyDateTime :: Eq HackyDateTime where eq = genericEq
 instance showHackyDateTime :: Show HackyDateTime where show = genericShow
 
+data StreamingAPI
+  = SStatus Status
+  | SRetweetedStatus RetweetedStatus
+  | SEvent Event
+  | SDelete Delete
+  -- | SScrubGeo ScrubGeo
+  | SFriends Friends
+  | SDirectMessage DirectMessage
+  | SUnknown Json
 
---data StreamingAPI = SStatus Status
---                  | SRetweetedStatus RetweetedStatus
---                  | SEvent Event
---                  | SDelete Delete
---                  -- | SScrubGeo ScrubGeo
---                  | SFriends Friends
---                  | SDirectMessage DirectMessage
---                  | SUnknown Value
---                  deriving (Show, Eq, Data, Typeable, Generic)
+derive instance genericStreamingAPI :: Generic StreamingAPI _
+-- TODO: Take off these constraints when there is an Eq and Show instance for
+-- Status.
+instance eqStreamingAPI :: Eq Status => Eq StreamingAPI where eq = genericEq
+instance showStreamingAPI :: Show Status => Show StreamingAPI where show = genericShow
 
---instance FromJSON StreamingAPI where
---    parseJSON v@(Object o) =
---        SRetweetedStatus <$> js <|>
---        SStatus <$> js <|>
---        SEvent <$> js <|>
---        SDelete <$> js <|>
---        SFriends <$> (o .: "friends") <|>
---        SDirectMessage <$> (o .: "direct_message") <|>
---        return (SUnknown v)
---      where
---        js :: FromJSON a => Parser a
---        js = parseJSON v
---    parseJSON v = fail $ "couldn't parse StreamingAPI from: " ++ show v
+instance decodeJsonStreamingAPI :: DecodeJson StreamingAPI where
+  decodeJson :: Json -> Either String StreamingAPI
+  decodeJson =
+    foldJsonObject (Left "not a JObject (StreamingAPI)") \o ->
+      let json = fromObject o
+      in
+        SRetweetedStatus <$> decodeJson json <|>
+        SStatus <$> decodeJson json <|>
+        SEvent <$> decodeJson json <|>
+        SDelete <$> decodeJson json <|>
+        SFriends <$> (o .? "friends") <|>
+        SDirectMessage <$> (o .? "direct_message") <|>
+        pure (SUnknown json)
 
---instance ToJSON StreamingAPI where
---    toJSON (SStatus          s) = toJSON s
---    toJSON (SRetweetedStatus s) = toJSON s
---    toJSON (SEvent           e) = toJSON e
---    toJSON (SDelete          d) = toJSON d
---    toJSON (SFriends         f) = toJSON f
---    toJSON (SDirectMessage   m) = toJSON m
---    toJSON (SUnknown         v) = v
+instance encodeJsonStreamingAPI :: EncodeJson StreamingAPI where
+  encodeJson :: StreamingAPI -> Json
+  encodeJson (SRetweetedStatus retweetedStatus) = encodeJson retweetedStatus
+  encodeJson (SStatus status) = encodeJson status
+  encodeJson (SEvent event) = encodeJson event
+  encodeJson (SDelete delete) = encodeJson delete
+  encodeJson (SFriends friends) = encodeJson friends
+  encodeJson (SDirectMessage directMessage) = encodeJson directMessage
+  encodeJson (SUnknown unknown) = unknown
 
 -- | This type represents a Twitter tweet structure.
 -- See <https://dev.twitter.com/docs/platform-objects/tweets>.
