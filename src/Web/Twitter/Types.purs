@@ -543,43 +543,79 @@ instance encodeJsonSearchMetadata :: EncodeJson SearchMetadata where
     "max_id_str" := searchMetadata.searchMetadataMaxIdStr ~>
     jsonEmptyObject
 
---data RetweetedStatus =
---    RetweetedStatus
---    { rsCreatedAt       :: UTCTime
---    , rsId              :: StatusId
---    , rsText            :: Text
---    , rsSource          :: Text
---    , rsTruncated       :: Boolean
---    , rsEntities        :: Maybe Entities
---    , rsUser            :: User
---    , rsRetweetedStatus :: Status
---    , rsCoordinates     :: Maybe Coordinates
---    } deriving (Show, Eq, Data, Typeable, Generic)
+newtype RetweetedStatus = RetweetedStatus
+  { rsCreatedAt       :: HackyDateTime
+  , rsId              :: StatusId
+  , rsText            :: String
+  , rsSource          :: String
+  , rsTruncated       :: Boolean
+  , rsEntities        :: Maybe Entities
+  , rsUser            :: User
+  , rsRetweetedStatus :: Status
+  , rsCoordinates     :: Maybe Coordinates
+  }
 
---instance FromJSON RetweetedStatus where
---    parseJSON (Object o) = checkError o >>
---        RetweetedStatus <$> (o .:  "created_at" >>= return . fromTwitterTime)
---                        <*> o .:  "id"
---                        <*> o .:  "text"
---                        <*> o .:  "source"
---                        <*> o .:  "truncated"
---                        <*> o .:? "entities"
---                        <*> o .:  "user"
---                        <*> o .:  "retweeted_status"
---                        <*> o .:? "coordinates"
---    parseJSON v = fail $ "couldn't parse retweeted status from: " ++ show v
+toRetweetedStatus
+  :: HackyDateTime
+  -> StatusId
+  -> String
+  -> String
+  -> Boolean
+  -> Maybe Entities
+  -> User
+  -> Status
+  -> Maybe Coordinates
+  -> RetweetedStatus
+toRetweetedStatus
+    rsCreatedAt rsId rsText rsSource rsTruncated rsEntities rsUser
+    rsRetweetedStatus rsCoordinates =
+  RetweetedStatus
+    { rsCreatedAt
+    , rsId
+    , rsText
+    , rsSource
+    , rsTruncated
+    , rsEntities
+    , rsUser
+    , rsRetweetedStatus
+    , rsCoordinates
+    }
 
---instance ToJSON RetweetedStatus where
---    toJSON RetweetedStatus{..} = object [ "created_at"          .= TwitterTime rsCreatedAt
---                                        , "id"                  .= rsId
---                                        , "text"                .= rsText
---                                        , "source"              .= rsSource
---                                        , "truncated"           .= rsTruncated
---                                        , "entities"            .= rsEntities
---                                        , "user"                .= rsUser
---                                        , "retweeted_status"    .= rsRetweetedStatus
---                                        , "coordinates"         .= rsCoordinates
---                                        ]
+derive instance genericRetweetedStatus :: Generic RetweetedStatus _
+derive instance newtypeRetweetedStatus :: Newtype RetweetedStatus _
+-- TODO: Take off these constraints when there is an Eq and Show instance for
+-- Status.
+instance eqRetweetedStatus :: Eq Status => Eq RetweetedStatus where eq = genericEq
+instance showRetweetedStatus :: Show Status => Show RetweetedStatus where show = genericShow
+
+instance decodeJsonRetweetedStatus :: DecodeJson RetweetedStatus where
+  decodeJson :: Json -> Either String RetweetedStatus
+  decodeJson =
+    foldJsonObject (Left "not a JObject (RetweetedStatus)") $ checkError' \o ->
+      toRetweetedStatus
+        <$> map fromHackyWrapperShouldBeTwitterTime (o .?  "created_at")
+        <*> o .?  "id"
+        <*> o .?  "text"
+        <*> o .?  "source"
+        <*> o .?  "truncated"
+        <*> o .?? "entities"
+        <*> o .?  "user"
+        <*> o .?  "retweeted_status"
+        <*> o .?? "coordinates"
+
+instance encodeJsonRetweetedStatus :: EncodeJson RetweetedStatus where
+  encodeJson :: RetweetedStatus -> Json
+  encodeJson (RetweetedStatus retweetedStatus) =
+    "created_at" := HackyWrapperShouldBeTwitterTime retweetedStatus.rsCreatedAt ~>
+    "id" := retweetedStatus.rsId ~>
+    "text" := retweetedStatus.rsText ~>
+    "source" := retweetedStatus.rsSource ~>
+    "truncated" := retweetedStatus.rsTruncated ~>
+    "entities" := retweetedStatus.rsEntities ~>
+    "user" := retweetedStatus.rsUser ~>
+    "retweeted_status" := retweetedStatus.rsRetweetedStatus ~>
+    "coordinates" := retweetedStatus.rsCoordinates ~>
+    jsonEmptyObject
 
 newtype DirectMessage = DirectMessage
   { dmCreatedAt          :: HackyDateTime
