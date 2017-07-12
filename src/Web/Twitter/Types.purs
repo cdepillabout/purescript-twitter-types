@@ -79,19 +79,17 @@ type LanguageCode = String
 
 checkError :: JObject -> Either String Unit
 checkError o = do
-  err <- o .? "error"
+  err <- o .?? "error"
   go err
   where
-    go :: Either String String -> Either String Unit
-    go (Right msg) = Left msg
-    go (Left _) = Right unit
+    go :: Maybe String -> Either String Unit
+    go (Just msg) = Left msg
+    go Nothing = Right unit
 
 checkError'
   :: forall a. (JObject -> Either String a) -> JObject -> Either String a
 checkError' realFunc o =
   checkError o *> realFunc o
-
-
 
 -- | This is a time format displayed in a specific way.  See the function
 -- | `twitterTimeFormat` for an example of this.
