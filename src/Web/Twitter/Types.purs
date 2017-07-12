@@ -156,10 +156,8 @@ data StreamingAPI
   | SUnknown Json
 
 derive instance genericStreamingAPI :: Generic StreamingAPI _
--- TODO: Take off these constraints when there is an Eq and Show instance for
--- Status.
 derive instance eqStreamingAPI :: Eq StreamingAPI
-instance showStreamingAPI :: Show Status => Show StreamingAPI where show = genericShow
+instance showStreamingAPI :: Show StreamingAPI where show = genericShow
 
 instance decodeJsonStreamingAPI :: DecodeJson StreamingAPI where
   decodeJson :: Json -> Either String StreamingAPI
@@ -293,10 +291,8 @@ toStatus
 
 derive instance genericStatus :: Generic Status _
 derive instance newtypeStatus :: Newtype Status _
--- TODO: These are not working because Status is used recursively in the
--- definition of Status.
 derive instance eqStatus :: Eq Status
--- instance showStatus :: Show Status where show = genericShow
+instance showStatus :: Show Status where show x = genericShow x
 
 instance decodeJsonStatus :: DecodeJson Status where
   decodeJson :: Json -> Either String Status
@@ -570,10 +566,8 @@ toRetweetedStatus
 
 derive instance genericRetweetedStatus :: Generic RetweetedStatus _
 derive instance newtypeRetweetedStatus :: Newtype RetweetedStatus _
--- TODO: Take off these constraints when there is an Eq and Show instance for
--- Status.
 derive instance eqRetweetedStatus :: Eq RetweetedStatus
-instance showRetweetedStatus :: Show Status => Show RetweetedStatus where show = genericShow
+instance showRetweetedStatus :: Show RetweetedStatus where show = genericShow
 
 instance decodeJsonRetweetedStatus :: DecodeJson RetweetedStatus where
   decodeJson :: Json -> Either String RetweetedStatus
@@ -704,10 +698,8 @@ data EventTarget
   | ETUnknown Json
 
 derive instance genericEventTarget :: Generic EventTarget _
--- TODO: Take off these constraints when there is an Eq and Show instance for
--- Status.
 derive instance eqEventTarget :: Eq EventTarget
-instance showEventTarget :: Show Status => Show EventTarget where show = genericShow
+instance showEventTarget :: Show EventTarget where show = genericShow
 
 instance decodeJsonEventTarget :: DecodeJson EventTarget where
   decodeJson :: Json -> Either String EventTarget
@@ -753,10 +745,8 @@ toEvent evCreatedAt evTargetObject evEvent evTarget evSource =
 
 derive instance genericEvent :: Generic Event _
 derive instance newtypeEvent :: Newtype Event _
--- TODO: Take off these constraints when there is an Eq and Show instance for
--- Status.
 derive instance eqEvent :: Eq Event
-instance showEvent :: Show Status => Show Event where show = genericShow
+instance showEvent :: Show Event where show = genericShow
 
 instance decodeJsonEvent :: DecodeJson Event where
   decodeJson :: Json -> Either String Event
