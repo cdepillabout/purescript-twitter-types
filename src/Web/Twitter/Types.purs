@@ -54,21 +54,6 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, un)
 import Data.StrMap (StrMap, insert)
 
---import Control.Applicative
---import Control.Monad
---import Data.Aeson
---import Data.Aeson.Types (Parser)
---import Data.Data
---import Data.HashMap.Strict (HashMap, fromList, union)
---import Data.Text (Text, unpack, pack)
---import GHC.Generics
---#if MIN_VERSION_time(1, 5, 0)
---import Data.Time
---#else
---import Data.Time
---import System.Locale
---#endif
-
 type UserId       = Int
 type Friends      = Array UserId
 type URIString    = String
