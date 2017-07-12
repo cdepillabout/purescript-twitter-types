@@ -108,7 +108,7 @@ twitterTimeFormat = "%a %b %d %T %z %Y"
 
 derive instance genericTwitterTime :: Generic TwitterTime _
 derive instance newtypeTwitterTime :: Newtype TwitterTime _
-instance eqTwitterTime :: Eq TwitterTime where eq = genericEq
+derive instance eqTwitterTime :: Eq TwitterTime
 instance showTwitterTime :: Show TwitterTime where show = genericShow
 
 --instance FromJSON TwitterTime where
@@ -135,7 +135,7 @@ fromHackyWrapperShouldBeTwitterTime (HackyWrapperShouldBeTwitterTime hackyDateTi
 
 derive instance genericHackyWrapperShouldBeTwitterTime :: Generic HackyWrapperShouldBeTwitterTime _
 derive instance newtypeHackyWrapperShouldBeTwitterTime :: Newtype HackyWrapperShouldBeTwitterTime _
-instance eqHackyWrapperShouldBeTwitterTime :: Eq HackyWrapperShouldBeTwitterTime where eq = genericEq
+derive instance eqHackyWrapperShouldBeTwitterTime :: Eq HackyWrapperShouldBeTwitterTime
 instance showHackyWrapperShouldBeTwitterTime :: Show HackyWrapperShouldBeTwitterTime where show = genericShow
 
 
@@ -159,7 +159,7 @@ fromHackyDateTime (HackyDateTime s) = s
 
 derive instance genericHackyDateTime :: Generic HackyDateTime _
 derive instance newtypeHackyDateTime :: Newtype HackyDateTime _
-instance eqHackyDateTime :: Eq HackyDateTime where eq = genericEq
+derive instance eqHackyDateTime :: Eq HackyDateTime
 instance showHackyDateTime :: Show HackyDateTime where show = genericShow
 
 data StreamingAPI
@@ -313,6 +313,7 @@ derive instance newtypeStatus :: Newtype Status _
 -- definition of Status.
 -- instance eqStatus :: Eq Status where eq = genericEq
 -- instance showStatus :: Show Status where show = genericShow
+derive instance eqStatus :: Eq Status
 
 instance decodeJsonStatus :: DecodeJson Status where
   decodeJson :: Json -> Either String Status
@@ -450,7 +451,7 @@ toSearchStatus
 
 derive instance genericSearchStatus :: Generic SearchStatus _
 derive instance newtypeSearchStatus :: Newtype SearchStatus _
-instance eqSearchStatus :: Eq SearchStatus where eq = genericEq
+derive instance eqSearchStatus :: Eq SearchStatus
 instance showSearchStatus :: Show SearchStatus where show = genericShow
 
 instance decodeJsonSearchStatus :: DecodeJson SearchStatus where
@@ -514,7 +515,7 @@ toSearchMetadata searchMetadataMaxId searchMetadataSinceId searchMetadataRefresh
 
 derive instance genericSearchMetadata :: Generic SearchMetadata _
 derive instance newtypeSearchMetadata :: Newtype SearchMetadata _
-instance eqSearchMetadata :: Eq SearchMetadata where eq = genericEq
+derive instance eqSearchMetadata :: Eq SearchMetadata
 instance showSearchMetadata :: Show SearchMetadata where show = genericShow
 
 instance decodeJsonSearchMetadata :: DecodeJson SearchMetadata where
@@ -663,7 +664,7 @@ toDirectMessage
 
 derive instance genericDirectMessage :: Generic DirectMessage _
 derive instance newtypeDirectMessage :: Newtype DirectMessage _
-instance eqDirectMessage :: Eq DirectMessage where eq = genericEq
+derive instance eqDirectMessage :: Eq DirectMessage
 instance showDirectMessage :: Show DirectMessage where show = genericShow
 
 instance decodeJsonDirectMessage :: DecodeJson DirectMessage where
@@ -709,7 +710,7 @@ data EventType
   | Follow
 
 derive instance genericEventType :: Generic EventType _
-instance eqEventType :: Eq EventType where eq = genericEq
+derive instance eqEventType :: Eq EventType
 instance showEventType :: Show EventType where show = genericShow
 
 
@@ -806,7 +807,7 @@ toDelete delId delUserId =
 
 derive instance genericDelete :: Generic Delete _
 derive instance newtypeDelete :: Newtype Delete _
-instance eqDelete :: Eq Delete where eq = genericEq
+derive instance eqDelete :: Eq Delete
 instance showDelete :: Show Delete where show = genericShow
 
 instance decodeJsonDelete :: DecodeJson Delete where
@@ -966,7 +967,7 @@ toUser userContributorsEnabled userCreatedAt userDefaultProfile userDefaultProfi
 
 derive instance genericUser :: Generic User _
 derive instance newtypeUser :: Newtype User _
-instance eqUser :: Eq User where eq = genericEq
+derive instance eqUser :: Eq User
 instance showUser :: Show User where show = genericShow
 
 instance decodeJsonUser :: DecodeJson User where
@@ -1098,7 +1099,7 @@ toList' listId listName listFullName listMemberCount listSubscriberCount listMod
 
 derive instance genericList' :: Generic List' _
 derive instance newtypeList' :: Newtype List' _
-instance eqList' :: Eq List' where eq = genericEq
+derive instance eqList' :: Eq List'
 instance showList' :: Show List' where show = genericShow
 
 instance decodeJsonList' :: DecodeJson List' where
@@ -1138,7 +1139,7 @@ toHashTagEntity hashTagText =
 
 derive instance genericHashTagEntity :: Generic HashTagEntity _
 derive instance newtypeHashTagEntity :: Newtype HashTagEntity _
-instance eqHashTagEntity :: Eq HashTagEntity where eq = genericEq
+derive instance eqHashTagEntity :: Eq HashTagEntity
 instance showHashTagEntity :: Show HashTagEntity where show = genericShow
 
 instance decodeJsonHashTagEntity :: DecodeJson HashTagEntity where
@@ -1167,7 +1168,7 @@ toUserEntity userEntityUserId userEntityUserName userEntityUserScreenName =
 
 derive instance genericUserEntity :: Generic UserEntity _
 derive instance newtypeUserEntity :: Newtype UserEntity _
-instance eqUserEntity :: Eq UserEntity where eq = genericEq
+derive instance eqUserEntity :: Eq UserEntity
 instance showUserEntity :: Show UserEntity where show = genericShow
 
 instance decodeJsonUserEntity :: DecodeJson UserEntity where
@@ -1204,7 +1205,7 @@ toURLEntity ueURL ueExpanded ueDisplay =
 
 derive instance genericURLEntity :: Generic URLEntity _
 derive instance newtypeURLEntity :: Newtype URLEntity _
-instance eqURLEntity :: Eq URLEntity where eq = genericEq
+derive instance eqURLEntity :: Eq URLEntity
 instance showURLEntity :: Show URLEntity where show = genericShow
 
 instance decodeJsonURLEntity :: DecodeJson URLEntity where
@@ -1247,7 +1248,7 @@ toMediaEntity meType meId meSizes meMediaURL meMediaURLHttps meURL =
 
 derive instance genericMediaEntity :: Generic MediaEntity _
 derive instance newtypeMediaEntity :: Newtype MediaEntity _
-instance eqMediaEntity :: Eq MediaEntity where eq = genericEq
+derive instance eqMediaEntity :: Eq MediaEntity
 instance showMediaEntity :: Show MediaEntity where show = genericShow
 
 instance decodeJsonMediaEntity :: DecodeJson MediaEntity where
@@ -1292,7 +1293,7 @@ toMediaSize msWidth msHeight msResize =
 
 derive instance genericMediaSize :: Generic MediaSize _
 derive instance newtypeMediaSize :: Newtype MediaSize _
-instance eqMediaSize :: Eq MediaSize where eq = genericEq
+derive instance eqMediaSize :: Eq MediaSize
 instance showMediaSize :: Show MediaSize where show = genericShow
 
 instance decodeJsonMediaSize :: DecodeJson MediaSize where
@@ -1326,7 +1327,7 @@ toCoordinates coord t =
 
 derive instance genericCoordinates :: Generic Coordinates _
 derive instance newtypeCoordinates :: Newtype Coordinates _
-instance eqCoordinates :: Eq Coordinates where eq = genericEq
+derive instance eqCoordinates :: Eq Coordinates
 instance showCoordinates :: Show Coordinates where show = genericShow
 
 instance decodeJsonCoordinates :: DecodeJson Coordinates where
@@ -1384,7 +1385,7 @@ toPlace attr bb country cc fullname plid name t url =
 
 derive instance genericPlace :: Generic Place _
 derive instance newtypePlace :: Newtype Place _
-instance eqPlace :: Eq Place where eq = genericEq
+derive instance eqPlace :: Eq Place
 instance showPlace :: Show Place where show = genericShow
 
 instance decodeJsonPlace :: DecodeJson Place where
@@ -1432,7 +1433,7 @@ toBoundingBox boundingBoxCoordinates boundingBoxType =
 
 derive instance genericBoundingBox :: Generic BoundingBox _
 derive instance newtypeBoundingBox :: Newtype BoundingBox _
-instance eqBoundingBox :: Eq BoundingBox where eq = genericEq
+derive instance eqBoundingBox :: Eq BoundingBox
 instance showBoundingBox :: Show BoundingBox where show = genericShow
 
 instance decodeJsonBoundingBox :: DecodeJson BoundingBox where
@@ -1470,7 +1471,7 @@ toEntities enHashTags enUserMentions enURLs enMedia =
 
 derive instance genericEntities :: Generic Entities _
 derive instance newtypeEntities :: Newtype Entities _
-instance eqEntities :: Eq Entities where eq = genericEq
+derive instance eqEntities :: Eq Entities
 instance showEntities :: Show Entities where show = genericShow
 
 instance decodeJsonEntities :: DecodeJson Entities where
@@ -1547,7 +1548,7 @@ toContributor contribId screenName =
 
 derive instance genericContributor :: Generic Contributor _
 derive instance newtypeContributor :: Newtype Contributor _
-instance eqContributor :: Eq Contributor where eq = genericEq
+derive instance eqContributor :: Eq Contributor
 instance showContributor :: Show Contributor where show = genericShow
 
 instance decodeJsonContributor :: DecodeJson Contributor where
@@ -1601,7 +1602,7 @@ toImageSizeType w h t =
 
 derive instance genericImageSizeType :: Generic ImageSizeType _
 derive instance newtypeImageSizeType :: Newtype ImageSizeType _
-instance eqImageSizeType :: Eq ImageSizeType where eq = genericEq
+derive instance eqImageSizeType :: Eq ImageSizeType
 instance showImageSizeType :: Show ImageSizeType where show = genericShow
 
 instance decodeJsonImageSizeType :: DecodeJson ImageSizeType where
@@ -1639,7 +1640,7 @@ toUploadedMedia mediaId size image =
 
 derive instance genericUploadedMedia :: Generic UploadedMedia _
 derive instance newtypeUploadedMedia :: Newtype UploadedMedia _
-instance eqUploadedMedia :: Eq UploadedMedia where eq = genericEq
+derive instance eqUploadedMedia :: Eq UploadedMedia
 instance showUploadedMedia :: Show UploadedMedia where show = genericShow
 
 instance decodeJsonUploadedMedia :: DecodeJson UploadedMedia where
