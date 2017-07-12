@@ -47,7 +47,6 @@ import Data.Argonaut.Decode.Combinators ((.??), (.?=))
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
 import Data.Generic.Rep (class Generic)
-import Data.Generic.Rep.Eq (genericEq)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Int (fromNumber)
 import Data.Maybe (Maybe(..))
@@ -159,7 +158,7 @@ data StreamingAPI
 derive instance genericStreamingAPI :: Generic StreamingAPI _
 -- TODO: Take off these constraints when there is an Eq and Show instance for
 -- Status.
-instance eqStreamingAPI :: Eq Status => Eq StreamingAPI where eq = genericEq
+derive instance eqStreamingAPI :: Eq StreamingAPI
 instance showStreamingAPI :: Show Status => Show StreamingAPI where show = genericShow
 
 instance decodeJsonStreamingAPI :: DecodeJson StreamingAPI where
@@ -296,9 +295,8 @@ derive instance genericStatus :: Generic Status _
 derive instance newtypeStatus :: Newtype Status _
 -- TODO: These are not working because Status is used recursively in the
 -- definition of Status.
--- instance eqStatus :: Eq Status where eq = genericEq
--- instance showStatus :: Show Status where show = genericShow
 derive instance eqStatus :: Eq Status
+-- instance showStatus :: Show Status where show = genericShow
 
 instance decodeJsonStatus :: DecodeJson Status where
   decodeJson :: Json -> Either String Status
@@ -384,7 +382,7 @@ toSearchResult searchResultStatuses searchResultSearchMetadata =
 
 derive instance genericSearchResult :: Generic (SearchResult body) _
 derive instance newtypeSearchResult :: Newtype (SearchResult body) _
-instance eqSearchResult :: Eq body => Eq (SearchResult body) where eq = genericEq
+derive instance eqSearchResult :: Eq body => Eq (SearchResult body)
 instance showSearchResult :: Show body => Show (SearchResult body) where
   show = genericShow
 
@@ -574,7 +572,7 @@ derive instance genericRetweetedStatus :: Generic RetweetedStatus _
 derive instance newtypeRetweetedStatus :: Newtype RetweetedStatus _
 -- TODO: Take off these constraints when there is an Eq and Show instance for
 -- Status.
-instance eqRetweetedStatus :: Eq Status => Eq RetweetedStatus where eq = genericEq
+derive instance eqRetweetedStatus :: Eq RetweetedStatus
 instance showRetweetedStatus :: Show Status => Show RetweetedStatus where show = genericShow
 
 instance decodeJsonRetweetedStatus :: DecodeJson RetweetedStatus where
@@ -708,7 +706,7 @@ data EventTarget
 derive instance genericEventTarget :: Generic EventTarget _
 -- TODO: Take off these constraints when there is an Eq and Show instance for
 -- Status.
-instance eqEventTarget :: Eq Status => Eq EventTarget where eq = genericEq
+derive instance eqEventTarget :: Eq EventTarget
 instance showEventTarget :: Show Status => Show EventTarget where show = genericShow
 
 instance decodeJsonEventTarget :: DecodeJson EventTarget where
@@ -757,7 +755,7 @@ derive instance genericEvent :: Generic Event _
 derive instance newtypeEvent :: Newtype Event _
 -- TODO: Take off these constraints when there is an Eq and Show instance for
 -- Status.
-instance eqEvent :: Eq Status => Eq Event where eq = genericEq
+derive instance eqEvent :: Eq Event
 instance showEvent :: Show Status => Show Event where show = genericShow
 
 instance decodeJsonEvent :: DecodeJson Event where
@@ -1498,7 +1496,7 @@ toEntity entityBody entityIndices =
 
 derive instance genericEntity :: Generic (Entity a) _
 derive instance newtypeEntity :: Newtype (Entity a) _
-instance eqEntity :: Eq a => Eq (Entity a) where eq = genericEq
+derive instance eqEntity :: Eq a => Eq (Entity a)
 instance showEntity :: Show a => Show (Entity a) where show = genericShow
 
 instance decodeJsonEntity :: DecodeJson a => DecodeJson (Entity a) where
