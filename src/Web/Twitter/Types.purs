@@ -53,11 +53,11 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, un)
 import Data.StrMap (StrMap, insert)
 
-type UserId       = Int
-type Friends      = Array UserId
-type URIString    = String
-type UserName     = String
-type StatusId     = Int
+type UserId = Int
+type Friends = Array UserId
+type URIString = String
+type UserName = String
+type StatusId = Int
 type LanguageCode = String
 
 
