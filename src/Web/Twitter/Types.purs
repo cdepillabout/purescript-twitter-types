@@ -40,7 +40,7 @@ import Prelude
 
 import Control.Alt ((<|>))
 import Data.Argonaut
-  (class DecodeJson, class EncodeJson, JNumber, JObject, Json, (.?),
+  (class DecodeJson, class EncodeJson, JObject, JString, Json, (.?),
    (:=), (~>), decodeJson, encodeJson, foldJson, foldJsonObject,
    foldJsonString, fromObject, fromString, jsonEmptyObject, toObject)
 import Data.Argonaut.Decode.Combinators ((.??), (.?=))
@@ -48,13 +48,17 @@ import Data.DateTime (DateTime)
 import Data.Either (Either(..))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Data.Int (fromNumber)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, un)
 import Data.StrMap (StrMap, insert)
 
-type UserId = Int
-type Friends = Array UserId
+-- TODO: Write note that we will not supply the plain Id types, but instead use
+-- the IdStr types.
+-- https://dev.twitter.com/overview/api/twitter-ids-json-and-snowflake
+type UserIdStr = String
+-- type UserId = Int
+-- type Friends = Array UserId
+type Friends = Array UserIdStr
 type URIString = String
 type UserName = String
 type StatusId = Int
@@ -198,7 +202,7 @@ newtype Status = Status
   , statusId :: StatusId
   , statusInReplyToScreenName :: Maybe String
   , statusInReplyToStatusId :: Maybe StatusId
-  , statusInReplyToUserId :: Maybe UserId
+  , statusInReplyToUserIdStr :: Maybe UserIdStr
   , statusLang :: Maybe LanguageCode
   , statusPlace :: Maybe Place
   , statusPossiblySensitive :: Maybe Boolean
@@ -230,7 +234,7 @@ toStatus
   -> StatusId
   -> Maybe String
   -> Maybe StatusId
-  -> Maybe UserId
+  -> Maybe UserIdStr
   -> Maybe LanguageCode
   -> Maybe Place
   -> Maybe Boolean
@@ -252,7 +256,7 @@ toStatus
     statusContributors statusCoordinates statusCreatedAt
     statusCurrentUserRetweet statusEntities statusExtendedEntities
     statusFavoriteCount statusFavorited statusFilterLevel statusId
-    statusInReplyToScreenName statusInReplyToStatusId statusInReplyToUserId
+    statusInReplyToScreenName statusInReplyToStatusId statusInReplyToUserIdStr
     statusLang statusPlace statusPossiblySensitive statusScopes
     statusQuotedStatusId statusQuotedStatus statusRetweetCount statusRetweeted
     statusRetweetedStatus statusSource statusText statusTruncated statusUser
@@ -270,7 +274,7 @@ toStatus
     , statusId
     , statusInReplyToScreenName
     , statusInReplyToStatusId
-    , statusInReplyToUserId
+    , statusInReplyToUserIdStr
     , statusLang
     , statusPlace
     , statusPossiblySensitive
@@ -311,7 +315,7 @@ instance decodeJsonStatus :: DecodeJson Status where
         <*> o .?  "id"
         <*> o .?? "in_reply_to_screen_name"
         <*> o .?? "in_reply_to_status_id"
-        <*> o .?? "in_reply_to_user_id"
+        <*> o .?? "in_reply_to_user_id_str"
         <*> o .?? "lang"
         <*> o .?? "place"
         <*> o .?? "possibly_sensitive"
@@ -348,7 +352,7 @@ instance encodeJsonStatus :: EncodeJson Status where
     "id" := status.statusId ~>
     "in_reply_to_screen_name" := status.statusInReplyToScreenName ~>
     "in_reply_to_status_id" := status.statusInReplyToStatusId ~>
-    "in_reply_to_user_id" := status.statusInReplyToUserId ~>
+    "in_reply_to_user_id_str" := status.statusInReplyToUserIdStr ~>
     "lang" := status.statusLang ~>
     "place" := status.statusPlace ~>
     "possibly_sensitive" := status.statusPossiblySensitive ~>
@@ -606,8 +610,8 @@ newtype DirectMessage = DirectMessage
   , dmRecipientScreeName :: String
   , dmId :: StatusId
   , dmRecipient :: User
-  , dmRecipientId :: UserId
-  , dmSenderId :: UserId
+  , dmRecipientIdStr :: UserIdStr
+  , dmSenderIdStr :: UserIdStr
   , dmCoordinates :: Maybe Coordinates
   }
 
@@ -619,13 +623,13 @@ toDirectMessage
   -> String
   -> StatusId
   -> User
-  -> UserId
-  -> UserId
+  -> UserIdStr
+  -> UserIdStr
   -> Maybe Coordinates
   -> DirectMessage
 toDirectMessage
     dmCreatedAt dmSenderScreenName dmSender dmText dmRecipientScreeName dmId
-    dmRecipient dmRecipientId dmSenderId dmCoordinates =
+    dmRecipient dmRecipientIdStr dmSenderIdStr dmCoordinates =
   DirectMessage
     { dmCreatedAt
     , dmSenderScreenName
@@ -634,8 +638,8 @@ toDirectMessage
     , dmRecipientScreeName
     , dmId
     , dmRecipient
-    , dmRecipientId
-    , dmSenderId
+    , dmRecipientIdStr
+    , dmSenderIdStr
     , dmCoordinates
     }
 
@@ -656,8 +660,8 @@ instance decodeJsonDirectMessage :: DecodeJson DirectMessage where
         <*> o .?  "recipient_screen_name"
         <*> o .?  "id"
         <*> o .?  "recipient"
-        <*> o .?  "recipient_id"
-        <*> o .?  "sender_id"
+        <*> o .?  "recipient_id_str"
+        <*> o .?  "sender_id_str"
         <*> o .?? "coordinates"
 
 instance encodeJsonDirectMessage :: EncodeJson DirectMessage where
@@ -670,8 +674,8 @@ instance encodeJsonDirectMessage :: EncodeJson DirectMessage where
     "recipient_screen_name" := directMessage.dmRecipientScreeName ~>
     "id" := directMessage.dmId ~>
     "recipient" := directMessage.dmRecipient ~>
-    "recipient_id" := directMessage.dmRecipientId ~>
-    "sender_id" := directMessage.dmSenderId ~>
+    "recipient_id_str" := directMessage.dmRecipientIdStr ~>
+    "sender_id_str" := directMessage.dmSenderIdStr ~>
     "coordinates" := directMessage.dmCoordinates ~>
     jsonEmptyObject
 
@@ -771,12 +775,12 @@ instance encodeJsonEvent :: EncodeJson Event where
 
 newtype Delete = Delete
   { delId :: StatusId
-  , delUserId :: UserId
+  , delUserIdStr :: UserIdStr
   }
 
-toDelete :: StatusId -> UserId -> Delete
-toDelete delId delUserId =
-  Delete {delId, delUserId}
+toDelete :: StatusId -> UserIdStr -> Delete
+toDelete delId delUserIdStr =
+  Delete {delId, delUserIdStr}
 
 derive instance genericDelete :: Generic Delete _
 derive instance newtypeDelete :: Newtype Delete _
@@ -791,14 +795,14 @@ instance decodeJsonDelete :: DecodeJson Delete where
       statusObj <- deleteObj .? "status"
       toDelete
         <$> statusObj .? "id"
-        <*> statusObj .? "user_id"
+        <*> statusObj .? "user_id_str"
 
 instance encodeJsonDelete :: EncodeJson Delete where
   encodeJson :: Delete -> Json
   encodeJson (Delete delete) =
     let statusObj =
           "id" := delete.delId ~>
-          "user_id" := delete.delUserId ~>
+          "user_id_str" := delete.delUserIdStr ~>
           jsonEmptyObject
         deleteObj = "status" := statusObj ~> jsonEmptyObject
     in "delete" := deleteObj ~> jsonEmptyObject
@@ -818,7 +822,7 @@ newtype User = User
   , userFollowersCount :: Int
   , userFriendsCount :: Int
   , userGeoEnabled :: Boolean
-  , userId :: UserId
+  , userIdStr :: UserIdStr
   , userIsTranslator :: Boolean
   , userLang :: LanguageCode
   , userListedCount :: Int
@@ -863,7 +867,7 @@ toUser
   -> Int
   -> Int
   -> Boolean
-  -> UserId
+  -> UserIdStr
   -> Boolean
   -> LanguageCode
   -> Int
@@ -893,7 +897,7 @@ toUser
   -> Maybe (Array String)
   -> Maybe String
   -> User
-toUser userContributorsEnabled userCreatedAt userDefaultProfile userDefaultProfileImage userDescription userEmail userFavoritesCount userFollowRequestSent userFollowing userFollowersCount userFriendsCount userGeoEnabled userId userIsTranslator userLang userListedCount userLocation userName userNotifications userProfileBackgroundColor userProfileBackgroundImageURL userProfileBackgroundImageURLHttps userProfileBackgroundTile userProfileBannerURL userProfileImageURL userProfileImageURLHttps userProfileLinkColor userProfileSidebarBorderColor userProfileSidebarFillColor userProfileTextColor userProfileUseBackgroundImage userProtected userScreenName userShowAllInlineMedia userStatusesCount userTimeZone userURL userUtcOffset userVerified userWithheldInCountries userWithheldScope =
+toUser userContributorsEnabled userCreatedAt userDefaultProfile userDefaultProfileImage userDescription userEmail userFavoritesCount userFollowRequestSent userFollowing userFollowersCount userFriendsCount userGeoEnabled userIdStr userIsTranslator userLang userListedCount userLocation userName userNotifications userProfileBackgroundColor userProfileBackgroundImageURL userProfileBackgroundImageURLHttps userProfileBackgroundTile userProfileBannerURL userProfileImageURL userProfileImageURLHttps userProfileLinkColor userProfileSidebarBorderColor userProfileSidebarFillColor userProfileTextColor userProfileUseBackgroundImage userProtected userScreenName userShowAllInlineMedia userStatusesCount userTimeZone userURL userUtcOffset userVerified userWithheldInCountries userWithheldScope =
   User
     { userContributorsEnabled
     , userCreatedAt
@@ -907,7 +911,7 @@ toUser userContributorsEnabled userCreatedAt userDefaultProfile userDefaultProfi
     , userFollowersCount
     , userFriendsCount
     , userGeoEnabled
-    , userId
+    , userIdStr
     , userIsTranslator
     , userLang
     , userListedCount
@@ -962,7 +966,7 @@ instance decodeJsonUser :: DecodeJson User where
         <*> o .?  "followers_count"
         <*> o .?  "friends_count"
         <*> o .?  "geo_enabled"
-        <*> o .?  "id"
+        <*> o .?  "id_str"
         <*> o .?  "is_translator"
         <*> o .?  "lang"
         <*> o .?  "listed_count"
@@ -1007,7 +1011,7 @@ instance encodeJsonUser :: EncodeJson User where
     "followers_count" := user.userFollowersCount ~>
     "friends_count" := user.userFriendsCount ~>
     "geo_enabled" := user.userGeoEnabled ~>
-    "id" := user.userId ~>
+    "id_str" := user.userIdStr ~>
     "is_translator" := user.userIsTranslator ~>
     "lang" := user.userLang ~>
     "listed_count" := user.userListedCount ~>
@@ -1041,7 +1045,7 @@ instance encodeJsonUser :: EncodeJson User where
 
 
 newtype List' = List'
-  { listId :: Int
+  { listIdStr :: String
   , listName :: String
   , listFullName :: String
   , listMemberCount :: Int
@@ -1051,7 +1055,7 @@ newtype List' = List'
   }
 
 toList'
-  :: Int
+  :: String
   -> String
   -> String
   -> Int
@@ -1059,9 +1063,9 @@ toList'
   -> String
   -> User
   -> List'
-toList' listId listName listFullName listMemberCount listSubscriberCount listMode listUser =
+toList' listIdStr listName listFullName listMemberCount listSubscriberCount listMode listUser =
   List'
-    { listId
+    { listIdStr
     , listName
     , listFullName
     , listMemberCount
@@ -1080,7 +1084,7 @@ instance decodeJsonList' :: DecodeJson List' where
   decodeJson =
     foldJsonObject (Left "not a JObject (List')") $ checkError' \o ->
       toList'
-        <$> o .?  "id"
+        <$> o .?  "id_str"
         <*> o .?  "name"
         <*> o .?  "full_name"
         <*> o .?  "member_count"
@@ -1091,7 +1095,7 @@ instance decodeJsonList' :: DecodeJson List' where
 instance encodeJsonList' :: EncodeJson List' where
   encodeJson :: List' -> Json
   encodeJson (List' list) =
-    "id" := list.listId ~>
+    "id_str" := list.listIdStr ~>
     "name" := list.listName ~>
     "full_name" := list.listFullName ~>
     "member_count" := list.listMemberCount ~>
@@ -1130,14 +1134,14 @@ instance encodeJsonHashTagEntity :: EncodeJson HashTagEntity where
 -- | User mention entity.
 -- See <https://dev.twitter.com/docs/platform-objects/entities#obj-usermention>.
 newtype UserEntity = UserEntity
-  { userEntityUserId :: UserId
+  { userEntityUserIdStr :: UserIdStr
   , userEntityUserName :: UserName
   , userEntityUserScreenName :: String
   }
 
-toUserEntity :: UserId -> UserName -> String -> UserEntity
-toUserEntity userEntityUserId userEntityUserName userEntityUserScreenName =
-  UserEntity {userEntityUserId, userEntityUserName, userEntityUserScreenName}
+toUserEntity :: UserIdStr -> UserName -> String -> UserEntity
+toUserEntity userEntityUserIdStr userEntityUserName userEntityUserScreenName =
+  UserEntity {userEntityUserIdStr, userEntityUserName, userEntityUserScreenName}
 
 derive instance genericUserEntity :: Generic UserEntity _
 derive instance newtypeUserEntity :: Newtype UserEntity _
@@ -1149,14 +1153,14 @@ instance decodeJsonUserEntity :: DecodeJson UserEntity where
   decodeJson =
     foldJsonObject (Left "not a JObject (UserEntity)") \o ->
       toUserEntity
-        <$> o .? "id"
+        <$> o .? "id_str"
         <*> o .? "name"
         <*> o .? "screen_name"
 
 instance encodeJsonUserEntity :: EncodeJson UserEntity where
   encodeJson :: UserEntity -> Json
   encodeJson (UserEntity userEntity) =
-    "id" := userEntity.userEntityUserId ~>
+    "id_str" := userEntity.userEntityUserIdStr ~>
     "name" := userEntity.userEntityUserName ~>
     "screen_name" := userEntity.userEntityUserScreenName ~>
     jsonEmptyObject
@@ -1508,15 +1512,15 @@ instance encodeJsonEntity :: EncodeJson a => EncodeJson (Entity a) where
           fromObject $ insert "indices" (encodeJson entity.entityIndices) obj
 
 newtype Contributor = Contributor
-    { contributorId :: UserId
+    { contributorIdStr :: UserIdStr
     , contributorScreenName :: Maybe String
     }
 
-toContributor :: Int -> Maybe String -> Contributor
-toContributor contribId screenName =
+toContributor :: UserIdStr -> Maybe String -> Contributor
+toContributor contributorIdStr contributorScreenName =
   Contributor
-    { contributorId: contribId
-    , contributorScreenName: screenName
+    { contributorIdStr
+    , contributorScreenName
     }
 
 derive instance genericContributor :: Generic Contributor _
@@ -1526,34 +1530,24 @@ instance showContributor :: Show Contributor where show = genericShow
 
 instance decodeJsonContributor :: DecodeJson Contributor where
   decodeJson :: Json -> Either String Contributor
-  decodeJson =
-    foldJson
-      (const err)
-      (const err)
-      num
-      (const err)
-      (const err)
-      obj
+  decodeJson = foldJson err err err str err obj
     where
-      err :: forall a. Either String a
-      err = Left "not a JObject or JNumber (Contributor)"
+      err :: forall a b. a -> Either String b
+      err _ = Left "not a JObject or JString (Contributor)"
 
       obj :: JObject -> Either String Contributor
       obj o =
         toContributor
-          <$> o .? "id"
+          <$> o .? "id_str"
           <*> o .?? "screen_name"
 
-      num :: JNumber -> Either String Contributor
-      num jnum =
-        case fromNumber jnum of
-          Nothing -> Left "not an Int (Contributor)"
-          Just n -> Right $ toContributor n Nothing
+      str :: JString -> Either String Contributor
+      str jstring = Right $ toContributor jstring Nothing
 
 instance encodeJsonContributor :: EncodeJson Contributor where
   encodeJson :: Contributor -> Json
   encodeJson (Contributor contributor) =
-    "id" := contributor.contributorId ~>
+    "id_str" := contributor.contributorIdStr ~>
     "screen_name" := contributor.contributorScreenName ~>
     jsonEmptyObject
 
