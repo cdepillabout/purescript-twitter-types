@@ -527,15 +527,15 @@ instance encodeJsonSearchMetadata :: EncodeJson SearchMetadata where
     jsonEmptyObject
 
 newtype RetweetedStatus = RetweetedStatus
-  { rsCreatedAt       :: HackyDateTime
-  , rsId              :: StatusId
-  , rsText            :: String
-  , rsSource          :: String
-  , rsTruncated       :: Boolean
-  , rsEntities        :: Maybe Entities
-  , rsUser            :: User
+  { rsCreatedAt :: HackyDateTime
+  , rsId :: StatusId
+  , rsText :: String
+  , rsSource :: String
+  , rsTruncated :: Boolean
+  , rsEntities :: Maybe Entities
+  , rsUser :: User
   , rsRetweetedStatus :: Status
-  , rsCoordinates     :: Maybe Coordinates
+  , rsCoordinates :: Maybe Coordinates
   }
 
 toRetweetedStatus
@@ -599,16 +599,16 @@ instance encodeJsonRetweetedStatus :: EncodeJson RetweetedStatus where
     jsonEmptyObject
 
 newtype DirectMessage = DirectMessage
-  { dmCreatedAt          :: HackyDateTime
-  , dmSenderScreenName   :: String
-  , dmSender             :: User
-  , dmText               :: String
+  { dmCreatedAt :: HackyDateTime
+  , dmSenderScreenName :: String
+  , dmSender :: User
+  , dmText :: String
   , dmRecipientScreeName :: String
-  , dmId                 :: StatusId
-  , dmRecipient          :: User
-  , dmRecipientId        :: UserId
-  , dmSenderId           :: UserId
-  , dmCoordinates        :: Maybe Coordinates
+  , dmId :: StatusId
+  , dmRecipient :: User
+  , dmRecipientId :: UserId
+  , dmSenderId :: UserId
+  , dmCoordinates :: Maybe Coordinates
   }
 
 toDirectMessage
@@ -720,11 +720,11 @@ instance encodeJsonEventTarget :: EncodeJson EventTarget where
   encodeJson (ETUnknown unknown) = unknown
 
 newtype Event = Event
-  { evCreatedAt       :: HackyDateTime
-  , evTargetObject    :: Maybe EventTarget
-  , evEvent           :: String
-  , evTarget          :: EventTarget
-  , evSource          :: EventTarget
+  { evCreatedAt :: HackyDateTime
+  , evTargetObject :: Maybe EventTarget
+  , evEvent :: String
+  , evTarget :: EventTarget
+  , evSource :: EventTarget
   }
 
 toEvent
@@ -770,7 +770,7 @@ instance encodeJsonEvent :: EncodeJson Event where
     jsonEmptyObject
 
 newtype Delete = Delete
-  { delId  :: StatusId
+  { delId :: StatusId
   , delUserId :: UserId
   }
 
@@ -1474,7 +1474,7 @@ type EntityIndices = Array Int
 
 newtype Entity a =
     Entity
-    { entityBody    :: a
+    { entityBody :: a
     -- ^ The detail information of specific entity types (HashTag, URL, User)
     , entityIndices :: EntityIndices
     -- ^ The character positions the Entity was extracted from
