@@ -42,15 +42,15 @@ import Control.Alt ((<|>))
 import Data.Argonaut
   (class DecodeJson, class EncodeJson, JObject, JString, Json, (.?),
    (:=), (~>), decodeJson, encodeJson, foldJson, foldJsonObject,
-   foldJsonString, fromObject, fromString, jsonEmptyObject, toObject)
+   foldJsonString, fromObject, fromString, isNull, jsonEmptyObject, toObject)
 import Data.Argonaut.Decode.Combinators ((.??), (.?=))
 import Data.DateTime (DateTime)
 import Data.Either (Either(..))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype, un)
-import Data.StrMap (StrMap, insert)
+import Data.StrMap (StrMap, insert, lookup)
 import Global (readFloat)
 
 -- TODO: Write note that we will not supply the plain Id types, but instead use
@@ -62,7 +62,7 @@ type UserId = Number
 type Friends = Array UserIdStr
 type URIString = String
 type UserName = String
-type StatusId = Int
+type StatusId = Number
 type LanguageCode = String
 
 
@@ -454,7 +454,7 @@ instance decodeJsonSearchStatus :: DecodeJson SearchStatus where
         <*> o .?  "text"
         <*> o .?  "source"
         <*> o .?  "user"
-        <*> o .?? "coordinates"
+        <*> getFieldOptionalOrNull o "coordinates"
 
 instance encodeJsonSearchStatus :: EncodeJson SearchStatus where
   encodeJson :: SearchStatus -> Json
@@ -1688,3 +1688,14 @@ instance encodeJsonUploadedMedia :: EncodeJson UploadedMedia where
     "size" := uploadedMedia.uploadedMediaSize ~>
     "image" := uploadedMedia.uploadedMediaImage ~>
     jsonEmptyObject
+
+getFieldOptionalOrNull
+  :: forall a. DecodeJson a => JObject -> String -> Either String (Maybe a)
+getFieldOptionalOrNull o s =
+  maybe
+    (pure Nothing)
+    decode
+    (lookup s o)
+  where
+    decode :: Json -> Either String (Maybe a)
+    decode json = if isNull json then pure Nothing else Just <$> decodeJson json
