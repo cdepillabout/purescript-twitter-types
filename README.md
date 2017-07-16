@@ -1,8 +1,7 @@
 # purescript-twitter-types
 
-[![Latest release](http://img.shields.io/bower/v/purescript-twitter-types.svg)](https://github.com/purescript-contrib/purescript-twitter-types/releases)
-[![Build Status](https://travis-ci.org/purescript-contrib/purescript-twitter-types.svg?branch=master)](https://travis-ci.org/purescript-contrib/purescript-twitter-types)
-[![Maintainer: cdepillabout](https://img.shields.io/badge/maintainer-cdepillabout-lightgrey.svg)](http://github.com/cdepillabout)
+[![Latest release](http://img.shields.io/bower/v/purescript-twitter-types.svg)](https://github.com/cdepillabout/purescript-twitter-types/releases)
+[![Build Status](https://travis-ci.org/cdepillabout/purescript-twitter-types.svg?branch=master)](https://travis-ci.org/cdepillabout/purescript-twitter-types)
 
 Types for working with Twitter's API.
 
